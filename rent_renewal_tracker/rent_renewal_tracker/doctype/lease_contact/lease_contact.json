@@ -1,0 +1,30 @@
+{
+ "actions": [],
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["contact_type", "contact_name", "organization", "email", "phone", "receives_reminders", "notes"],
+ "fields": [
+  {"fieldname": "contact_type", "fieldtype": "Select", "in_list_view": 1, "label": "Contact Type", "options": "Landlord\nLegal\nFacility\nFinance\nEscalation\nOther", "reqd": 1},
+  {"fieldname": "contact_name", "fieldtype": "Data", "in_list_view": 1, "label": "Name", "reqd": 1},
+  {"fieldname": "organization", "fieldtype": "Data", "label": "Organization"},
+  {"fieldname": "email", "fieldtype": "Data", "in_list_view": 1, "label": "Email", "options": "Email"},
+  {"fieldname": "phone", "fieldtype": "Data", "label": "Phone", "options": "Phone"},
+  {"default": "0", "fieldname": "receives_reminders", "fieldtype": "Check", "in_list_view": 1, "label": "Receives Reminders"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Rent Renewal Tracker",
+ "name": "Lease Contact",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": []
+}
+

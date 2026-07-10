@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rent-renewal-tracker"
+version = "0.1.0"
+description = "Lease lifecycle and rent renewal management for Frappe"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+authors = [
+  { name = "Rent Renewal Tracker contributors" }
+]
+dependencies = []
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["rent_renewal_tracker*"]
+
+[tool.setuptools.data-files]
+"share/doc/rent-renewal-tracker" = ["docs/BENCH_DEPLOYMENT.md"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

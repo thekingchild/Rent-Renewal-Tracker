@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:policy_name",
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["policy_name", "enabled", "schedule_section", "thresholds", "overdue_cadence_days", "delivery_section", "email_enabled", "system_notification_enabled", "recipients", "template_section", "subject_template", "message_template"],
+ "fields": [
+  {"fieldname": "policy_name", "fieldtype": "Data", "in_list_view": 1, "label": "Policy Name", "reqd": 1, "unique": 1},
+  {"default": "1", "fieldname": "enabled", "fieldtype": "Check", "in_list_view": 1, "label": "Enabled"},
+  {"fieldname": "schedule_section", "fieldtype": "Section Break", "label": "Schedule"},
+  {"fieldname": "thresholds", "fieldtype": "Table", "label": "Reminder Thresholds", "options": "Reminder Threshold", "reqd": 1},
+  {"default": "7", "fieldname": "overdue_cadence_days", "fieldtype": "Int", "label": "Overdue Cadence (Days)", "non_negative": 1, "reqd": 1},
+  {"fieldname": "delivery_section", "fieldtype": "Section Break", "label": "Delivery"},
+  {"default": "1", "fieldname": "email_enabled", "fieldtype": "Check", "label": "Email Enabled"},
+  {"default": "1", "fieldname": "system_notification_enabled", "fieldtype": "Check", "label": "System Notification Enabled"},
+  {"fieldname": "recipients", "fieldtype": "Table", "label": "Recipients", "options": "Reminder Recipient", "reqd": 1},
+  {"fieldname": "template_section", "fieldtype": "Section Break", "label": "Templates"},
+  {"default": "Lease {{ lease.name }} expires in {{ days_to_expiry }} day(s)", "fieldname": "subject_template", "fieldtype": "Data", "label": "Subject Template", "reqd": 1},
+  {"default": "<p>{{ lease.lease_title }} for {{ property_name }} ends on {{ lease.end_date }}.</p><p>Responsible officer: {{ lease.responsible_officer }}. Renewal status: {{ lease.renewal_status }}.</p><p><a href=\"{{ lease_url }}\">Open lease</a></p>", "fieldname": "message_template", "fieldtype": "Code", "label": "Message Template", "options": "HTML", "reqd": 1}
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [{"link_doctype": "Reminder Log", "link_fieldname": "policy"}],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Rent Renewal Tracker",
+ "name": "Reminder Policy",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Rent Renewal System Manager", "share": 1, "write": 1},
+  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "Lease Administrator"},
+  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "Lease Auditor"}
+ ],
+ "sort_field": "policy_name",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}
+

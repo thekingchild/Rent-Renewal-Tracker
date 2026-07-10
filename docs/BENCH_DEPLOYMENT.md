@@ -1,0 +1,85 @@
+# Frappe Bench Deployment
+
+## Supported baseline
+
+- Frappe Framework v16.x
+- Python 3.14+
+- Node.js 24+
+- A Linux, WSL, or container-based Bench with its database and queue services running
+
+The application depends only on Frappe; ERPNext is not required.
+
+## Install
+
+From the Bench directory, fetch the repository after its application files are committed:
+
+```bash
+bench get-app <repository-url> --branch version-16
+bench --site <site-name> install-app rent_renewal_tracker
+bench --site <site-name> migrate
+bench build --app rent_renewal_tracker
+bench --site <site-name> clear-cache
+```
+
+Verify the installation contract:
+
+```bash
+bench --site <site-name> list-apps
+bench --site <site-name> execute rent_renewal_tracker.health.verify_installation
+```
+
+The health command must return `true` for the app, DocTypes, roles, workflow primitives,
+workflow, reminder defaults, Workspace, and reports.
+
+## Test
+
+Enable tests only on a development or disposable test site:
+
+```bash
+bench --site <test-site> set-config allow_tests true
+bench --site <test-site> run-tests --app rent_renewal_tracker
+```
+
+The integration suite covers installation defaults, lease calculations, schedules, private
+files, renewal cycles, successor leases, reminders, delivery retries, permissions-sensitive
+report queries, and the Apps Page permission hook.
+
+## Scheduler smoke test
+
+```bash
+bench --site <site-name> enable-scheduler
+bench --site <site-name> execute rent_renewal_tracker.scheduled_tasks.refresh_lease_statuses
+bench --site <site-name> execute rent_renewal_tracker.scheduled_tasks.refresh_rent_schedule_statuses
+bench --site <site-name> execute rent_renewal_tracker.reminders.process_due_reminders
+bench doctor
+```
+
+Configure an outgoing Email Account before expecting email reminder delivery. In-app alerts
+use Frappe Notification Log and do not require an external email service.
+
+## Upgrade
+
+```bash
+cd <frappe-bench>
+bench update --apps rent_renewal_tracker
+bench --site <site-name> migrate
+bench build --app rent_renewal_tracker
+bench --site <site-name> clear-cache
+bench --site <site-name> execute rent_renewal_tracker.health.verify_installation
+```
+
+Schema and default-data changes are delivered through `patches.txt`; do not manually import
+standard DocTypes or Workflow records during upgrades.
+
+## Rollback preparation
+
+Before production installation or upgrade:
+
+```bash
+bench --site <site-name> backup --with-files
+bench version
+```
+
+Record the Frappe and application commit IDs with the backup. Restore into a staging site and
+run the health check before using that backup as a production rollback point.
+

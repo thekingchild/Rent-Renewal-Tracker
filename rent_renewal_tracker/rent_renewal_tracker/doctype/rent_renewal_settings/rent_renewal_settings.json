@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "creation": "2026-07-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["defaults_section", "default_reminder_policy", "expiring_soon_threshold", "default_currency", "timezone", "delivery_section", "email_sender", "reminder_retry_limit", "administrator_error_recipients", "automation_section", "auto_create_renewal_request"],
+ "fields": [
+  {"fieldname": "defaults_section", "fieldtype": "Section Break", "label": "Defaults"},
+  {"fieldname": "default_reminder_policy", "fieldtype": "Link", "label": "Default Reminder Policy", "options": "Reminder Policy"},
+  {"default": "90", "fieldname": "expiring_soon_threshold", "fieldtype": "Int", "label": "Expiring Soon Threshold (Days)", "non_negative": 1, "reqd": 1},
+  {"fieldname": "default_currency", "fieldtype": "Link", "label": "Default Currency", "options": "Currency"},
+  {"fieldname": "timezone", "fieldtype": "Data", "label": "Timezone"},
+  {"fieldname": "delivery_section", "fieldtype": "Section Break", "label": "Delivery"},
+  {"fieldname": "email_sender", "fieldtype": "Data", "label": "Email Sender", "options": "Email"},
+  {"default": "2", "fieldname": "reminder_retry_limit", "fieldtype": "Int", "label": "Reminder Retry Limit", "non_negative": 1, "reqd": 1},
+  {"fieldname": "administrator_error_recipients", "fieldtype": "Small Text", "label": "Administrator Error Recipients"},
+  {"fieldname": "automation_section", "fieldtype": "Section Break", "label": "Automation"},
+  {"default": "0", "fieldname": "auto_create_renewal_request", "fieldtype": "Check", "label": "Create Renewal Request at First Threshold"}
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Rent Renewal Tracker",
+ "name": "Rent Renewal Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {"read": 1, "role": "Rent Renewal System Manager", "write": 1},
+  {"read": 1, "role": "Lease Administrator"},
+  {"read": 1, "role": "Lease Auditor"}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
