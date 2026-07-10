@@ -37,8 +37,10 @@ Bench installation, testing, upgrade, and rollback commands are in
 
 From the Bench directory:
 
+Use the explicit `rent_renewal_tracker` app name when fetching this repository. The GitHub repository name contains hyphens, but Bench and Frappe asset builds expect the cloned app folder to match the Python module name.
+
 ```bash
-bench get-app <repository-url> --branch version-16
+bench get-app rent_renewal_tracker https://github.com/thekingchild/Rent-Renewal-Tracker --branch master
 bench --site <site-name> install-app rent_renewal_tracker
 bench --site <site-name> migrate
 bench --site <site-name> list-apps

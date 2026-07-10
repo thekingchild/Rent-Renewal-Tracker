@@ -471,7 +471,7 @@ Planned installation flow:
 
 ```bash
 cd frappe-bench
-bench get-app https://<git-host>/<organization>/rent_renewal_tracker --branch version-16
+bench get-app rent_renewal_tracker https://<git-host>/<organization>/Rent-Renewal-Tracker --branch <branch>
 bench --site <site-name> install-app rent_renewal_tracker
 bench --site <site-name> migrate
 bench --site <site-name> enable-scheduler
