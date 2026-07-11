@@ -81,3 +81,17 @@ class TestLease(IntegrationTestCase):
         lease = self.make_lease(monthly_rent=-1)
 
         self.assertRaises(frappe.ValidationError, lease.insert)
+
+    def test_assigns_document_id(self):
+        lease = self.make_lease(lease_status="Draft").insert()
+
+        self.assertEqual(lease.lease_id, lease.name)
+        self.assertTrue(lease.lease_id.startswith("LEASE-"))
+
+    def test_submit_activates_lease(self):
+        lease = self.make_lease(lease_status="Draft").insert()
+
+        lease.submit()
+
+        self.assertEqual(lease.docstatus, 1)
+        self.assertIn(lease.lease_status, {"Active", "Expiring Soon"})

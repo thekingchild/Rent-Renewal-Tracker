@@ -11,8 +11,20 @@ def refresh_lease_statuses():
 
     for lease_name in lease_names:
         lease = frappe.get_doc("Lease", lease_name)
-        lease.flags.from_scheduler = True
-        lease.save(ignore_permissions=True)
+        lease.calculate_derived_values()
+        frappe.db.set_value(
+            "Lease",
+            lease.name,
+            {
+                "notice_deadline": lease.notice_deadline,
+                "days_to_expiry": lease.days_to_expiry,
+                "next_action_date": lease.next_action_date,
+                "annual_rent": lease.annual_rent,
+                "total_annual_occupancy_cost": lease.total_annual_occupancy_cost,
+                "lease_status": lease.lease_status,
+            },
+            update_modified=False,
+        )
 
 
 def refresh_rent_schedule_statuses():

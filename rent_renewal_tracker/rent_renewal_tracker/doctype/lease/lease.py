@@ -9,6 +9,17 @@ RENEWAL_IN_PROGRESS = {"Draft", "Pending Approval", "Approved"}
 
 
 class Lease(Document):
+    def before_insert(self):
+        self.lease_id = self.name
+
+    def before_submit(self):
+        self.lease_status = "Active"
+        self.calculate_derived_values()
+        self.validate_required_terms()
+
+    def before_cancel(self):
+        self.lease_status = "Terminated"
+
     def validate(self):
         self.set_property_region()
         self.validate_dates()
@@ -89,6 +100,10 @@ class Lease(Document):
         if self.lease_status not in {"Active", "Expiring Soon", "Renewal in Progress"}:
             return
 
+        self.validate_required_terms()
+
+    def validate_required_terms(self):
+
         required = (
             "property",
             "landlord",
@@ -102,4 +117,4 @@ class Lease(Document):
             missing.append(_("Monthly Rent or Annual Rent"))
 
         if missing:
-            frappe.throw(_("Active leases require: {0}.").format(", ".join(missing)))
+            frappe.throw(_("Submitted or active leases require: {0}.").format(", ".join(missing)))

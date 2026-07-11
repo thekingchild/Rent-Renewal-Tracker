@@ -75,6 +75,37 @@ class TestLeaseDocument(IntegrationTestCase):
         self.assertEqual(attachment.attached_to_doctype, "Lease Document")
         self.assertEqual(attachment.attached_to_name, document.name)
 
+    def test_accepts_file_uploaded_against_unsaved_document(self):
+        content = f"test-{frappe.generate_hash(length=12)}".encode()
+        file_doc = save_file(
+            f"lease-document-{frappe.generate_hash(length=8)}.pdf",
+            content,
+            "Lease Document",
+            f"new-lease-document-{frappe.generate_hash(length=8)}",
+            is_private=1,
+        )
+
+        document = self.make_document(file_doc.file_url).insert()
+
+        attachment = frappe.db.get_value(
+            "File", file_doc.name, ["attached_to_doctype", "attached_to_name"], as_dict=True
+        )
+        self.assertEqual(attachment.attached_to_doctype, "Lease Document")
+        self.assertEqual(attachment.attached_to_name, document.name)
+
+    def test_reuses_permitted_file_without_moving_original_attachment(self):
+        file_doc = self.make_file(is_private=1)
+        original = self.make_document(file_doc.file_url).insert()
+
+        reused = self.make_document(file_doc.file_url, title="Agreement Copy").insert()
+
+        attachment = frappe.db.get_value(
+            "File", file_doc.name, ["attached_to_doctype", "attached_to_name"], as_dict=True
+        )
+        self.assertNotEqual(reused.name, original.name)
+        self.assertEqual(attachment.attached_to_doctype, "Lease Document")
+        self.assertEqual(attachment.attached_to_name, original.name)
+
     def test_rejects_public_file(self):
         file_doc = self.make_file(is_private=0)
 
@@ -94,4 +125,3 @@ class TestLeaseDocument(IntegrationTestCase):
         )
 
         self.assertRaises(frappe.ValidationError, document.insert)
-

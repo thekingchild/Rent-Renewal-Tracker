@@ -72,20 +72,49 @@ class LeaseDocument(Document):
                 )
             )
 
-        attached_to = (file_record.attached_to_doctype, file_record.attached_to_name)
-        permitted_attachments = {(None, None), ("Lease", self.lease), ("Lease Document", self.name)}
-        if attached_to not in permitted_attachments:
-            frappe.throw(_("The selected file is already attached to another record."))
+        if not self.can_use_file(file_record):
+            frappe.throw(
+                _("You do not have permission to use the selected file or its attached record."),
+                frappe.PermissionError,
+            )
+
+    def can_use_file(self, file_record):
+        attached_doctype = file_record.attached_to_doctype
+        attached_name = file_record.attached_to_name
+        if not attached_doctype or not attached_name:
+            return True
+        if (attached_doctype, attached_name) in {
+            ("Lease", self.lease),
+            ("Lease Document", self.name),
+        }:
+            return True
+
+        # Uploads made before the form is saved are attached to a temporary name.
+        if attached_doctype == "Lease Document" and not frappe.db.exists(
+            "Lease Document", attached_name
+        ):
+            return True
+
+        return frappe.has_permission("File", "read", file_record.name) and frappe.has_permission(
+            attached_doctype, "read", attached_name
+        )
 
     def attach_file_to_document(self):
         file_record = self.get_file_record()
         if not file_record or not self.name:
             return
-        if (file_record.attached_to_doctype, file_record.attached_to_name) == (
-            "Lease Document",
-            self.name,
-        ):
+        attached_doctype = file_record.attached_to_doctype
+        attached_name = file_record.attached_to_name
+        if (attached_doctype, attached_name) == ("Lease Document", self.name):
             return
+        if attached_doctype and attached_name:
+            # Keep shared files attached to their original record. Only adopt files
+            # uploaded for this lease or against an unsaved Lease Document form.
+            is_temporary_upload = attached_doctype == "Lease Document" and not frappe.db.exists(
+                "Lease Document", attached_name
+            )
+            if (attached_doctype, attached_name) != ("Lease", self.lease) and not is_temporary_upload:
+                return
         frappe.db.set_value(
             "File",
             file_record.name,
