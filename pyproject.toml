@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rent_renewal_tracker"
-version = "0.1.0"
+version = "0.2.0"
 description = "Lease lifecycle and rent renewal management for Frappe"
 readme = "README.md"
 requires-python = ">=3.14"

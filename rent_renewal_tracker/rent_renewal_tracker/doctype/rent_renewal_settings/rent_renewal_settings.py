@@ -12,8 +12,16 @@ class RentRenewalSettings(Document):
             frappe.throw(_("Reminder Retry Limit cannot be negative."))
         for email in self.get_error_recipient_emails():
             validate_email_address(email, throw=True)
+        for email in self.get_weekly_digest_recipient_emails():
+            validate_email_address(email, throw=True)
 
     def get_error_recipient_emails(self):
-        raw = (self.administrator_error_recipients or "").replace(",", "\n")
-        return [email.strip() for email in raw.splitlines() if email.strip()]
+        return self.get_email_list(self.administrator_error_recipients)
 
+    def get_weekly_digest_recipient_emails(self):
+        return self.get_email_list(self.weekly_digest_recipients)
+
+    @staticmethod
+    def get_email_list(value):
+        raw = (value or "").replace(",", "\n")
+        return [email.strip() for email in raw.splitlines() if email.strip()]

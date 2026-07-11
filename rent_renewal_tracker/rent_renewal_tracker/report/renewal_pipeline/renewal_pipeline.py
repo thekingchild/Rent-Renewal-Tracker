@@ -1,3 +1,5 @@
+from collections import Counter
+
 import frappe
 from frappe import _
 from frappe.utils import date_diff, today
@@ -39,7 +41,27 @@ def execute(filters=None):
     for row in rows:
         row.age_days = date_diff(today(), row.requested_on) if row.requested_on else 0
 
-    return get_columns(), rows
+    state_counts = Counter(row.workflow_state for row in rows)
+    states = [
+        "Draft",
+        "Department Review",
+        "Finance Review",
+        "Legal Review",
+        "Management Approval",
+        "Approved",
+    ]
+    chart = {
+        "data": {
+            "labels": [_(state) for state in states],
+            "datasets": [
+                {"name": _("Renewals"), "values": [state_counts.get(state, 0) for state in states]}
+            ],
+        },
+        "type": "bar",
+        "colors": ["#2563eb"],
+    }
+    message = None if rows else _("No renewal requests match the selected filters.")
+    return get_columns(), rows, message, chart
 
 
 def get_columns():

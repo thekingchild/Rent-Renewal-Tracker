@@ -60,6 +60,74 @@ def after_install():
     """Install the default native renewal workflow after app DocTypes are synchronized."""
     setup_renewal_workflow()
     setup_reminder_defaults()
+    setup_dashboard_defaults()
+
+
+NUMBER_CARDS = (
+    ("Expiring in 30 Days", "rent_renewal_tracker.dashboard.leases_expiring_30_days", "Lease", "#b45309"),
+    ("Expiring in 60 Days", "rent_renewal_tracker.dashboard.leases_expiring_60_days", "Lease", "#d97706"),
+    ("Expiring in 90 Days", "rent_renewal_tracker.dashboard.leases_expiring_90_days", "Lease", "#f59e0b"),
+    (
+        "Renewals Waiting for Me",
+        "rent_renewal_tracker.dashboard.renewals_waiting_for_me",
+        "Renewal Request",
+        "#2563eb",
+    ),
+    (
+        "Overdue Rent Obligations",
+        "rent_renewal_tracker.dashboard.overdue_rent_obligations",
+        "Rent Schedule",
+        "#dc2626",
+    ),
+    ("Failed Reminders", "rent_renewal_tracker.dashboard.failed_reminders", "Reminder Log", "#991b1b"),
+    ("Annual Rent Exposure", "rent_renewal_tracker.dashboard.annual_rent_exposure", "Lease", "#047857"),
+)
+
+DASHBOARD_CHARTS = (
+    ("Lease Expiry Outlook", "Upcoming Expiries"),
+    ("Renewal Workflow", "Renewal Pipeline"),
+)
+
+
+def setup_dashboard_defaults():
+    for label, method, document_type, color in NUMBER_CARDS:
+        name = frappe.db.get_value("Number Card", {"label": label}, "name")
+        card = frappe.get_doc("Number Card", name) if name else frappe.new_doc("Number Card")
+        card.update(
+            {
+                "label": label,
+                "type": "Custom",
+                "method": method,
+                "document_type": document_type,
+                "is_public": 1,
+                "is_standard": 0,
+                "module": "Rent Renewal Tracker",
+                "show_percentage_stats": 0,
+                "show_full_number": 1,
+                "color": color,
+            }
+        )
+        card.save(ignore_permissions=True)
+
+    for chart_name, report_name in DASHBOARD_CHARTS:
+        chart = (
+            frappe.get_doc("Dashboard Chart", chart_name)
+            if frappe.db.exists("Dashboard Chart", chart_name)
+            else frappe.new_doc("Dashboard Chart")
+        )
+        chart.update(
+            {
+                "chart_name": chart_name,
+                "chart_type": "Report",
+                "report_name": report_name,
+                "use_report_chart": 1,
+                "filters_json": "{}",
+                "is_public": 1,
+                "is_standard": 0,
+                "module": "Rent Renewal Tracker",
+            }
+        )
+        chart.save(ignore_permissions=True)
 
 
 def setup_renewal_workflow():

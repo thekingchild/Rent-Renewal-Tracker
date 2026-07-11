@@ -3,7 +3,7 @@ app_title = "Rent Renewal Tracker"
 app_publisher = "Rent Renewal Tracker contributors"
 app_description = "Lease lifecycle and rent renewal management"
 app_license = "MIT"
-app_version = "0.1.0"
+app_version = "0.2.0"
 
 required_apps = ["frappe"]
 
@@ -25,5 +25,6 @@ scheduler_events = {
         "rent_renewal_tracker.scheduled_tasks.refresh_lease_statuses",
         "rent_renewal_tracker.scheduled_tasks.refresh_rent_schedule_statuses",
         "rent_renewal_tracker.reminders.process_due_reminders",
-    ]
+    ],
+    "weekly": ["rent_renewal_tracker.weekly_digest.send_weekly_management_digest"],
 }

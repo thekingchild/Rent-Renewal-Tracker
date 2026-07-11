@@ -1,7 +1,10 @@
 {
  "app": "rent_renewal_tracker",
- "charts": [],
- "content": "[{\"id\":\"leases-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Leases\",\"col\":3}},{\"id\":\"renewals-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Renewals\",\"col\":3}},{\"id\":\"payments-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payments\",\"col\":3}},{\"id\":\"documents-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Documents\",\"col\":3}},{\"id\":\"workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"operations-card\",\"type\":\"card\",\"data\":{\"card_name\":\"Operations\",\"col\":4}},{\"id\":\"registers-card\",\"type\":\"card\",\"data\":{\"card_name\":\"Registers and Setup\",\"col\":4}},{\"id\":\"reports-card\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "charts": [
+  {"chart_name": "Lease Expiry Outlook", "label": "Lease Expiry Outlook"},
+  {"chart_name": "Renewal Workflow", "label": "Renewal Workflow"}
+ ],
+ "content": "[{\"id\":\"leases-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Leases\",\"col\":3}},{\"id\":\"renewals-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Renewals\",\"col\":3}},{\"id\":\"payments-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payments\",\"col\":3}},{\"id\":\"documents-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Documents\",\"col\":3}},{\"id\":\"actions-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Renewals Waiting for Me\",\"col\":3}},{\"id\":\"overdue-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Overdue Rent Obligations\",\"col\":3}},{\"id\":\"failed-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Failed Reminders\",\"col\":3}},{\"id\":\"exposure-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Annual Rent Exposure\",\"col\":3}},{\"id\":\"expiry-30-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring in 30 Days\",\"col\":4}},{\"id\":\"expiry-60-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring in 60 Days\",\"col\":4}},{\"id\":\"expiry-90-card\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring in 90 Days\",\"col\":4}},{\"id\":\"expiry-chart\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Lease Expiry Outlook\",\"col\":6}},{\"id\":\"renewal-chart\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Renewal Workflow\",\"col\":6}},{\"id\":\"workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"operations-card\",\"type\":\"card\",\"data\":{\"card_name\":\"Operations\",\"col\":4}},{\"id\":\"registers-card\",\"type\":\"card\",\"data\":{\"card_name\":\"Registers and Setup\",\"col\":4}},{\"id\":\"reports-card\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
  "creation": "2026-07-10 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,12 +16,14 @@
  "is_hidden": 0,
  "label": "Rent Renewal Tracker",
  "links": [
-  {"description": "Day-to-day lease, schedule, document, and renewal work", "hidden": 0, "is_query_report": 0, "label": "Operations", "link_count": 4, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+  {"description": "Day-to-day lease, schedule, document, and renewal work", "hidden": 0, "is_query_report": 0, "label": "Operations", "link_count": 5, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+  {"hidden": 0, "is_query_report": 1, "label": "My Actions", "link_count": 0, "link_to": "My Actions", "link_type": "Report", "onboard": 0, "report_ref_doctype": "Lease", "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Leases", "link_count": 0, "link_to": "Lease", "link_type": "DocType", "onboard": 0, "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Renewal Requests", "link_count": 0, "link_to": "Renewal Request", "link_type": "DocType", "onboard": 0, "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Rent Schedules", "link_count": 0, "link_to": "Rent Schedule", "link_type": "DocType", "onboard": 0, "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Lease Documents", "link_count": 0, "link_to": "Lease Document", "link_type": "DocType", "onboard": 0, "type": "Link"},
-  {"description": "Master data and reminder configuration", "hidden": 0, "is_query_report": 0, "label": "Registers and Setup", "link_count": 6, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+  {"description": "Master data and reminder configuration", "hidden": 0, "is_query_report": 0, "label": "Registers and Setup", "link_count": 7, "link_type": "DocType", "onboard": 0, "type": "Card Break"},
+  {"hidden": 0, "is_query_report": 1, "label": "Setup Readiness", "link_count": 0, "link_to": "Setup Readiness", "link_type": "Report", "onboard": 0, "report_ref_doctype": "Lease", "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Properties", "link_count": 0, "link_to": "Property", "link_type": "DocType", "onboard": 0, "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Landlords", "link_count": 0, "link_to": "Landlord", "link_type": "DocType", "onboard": 0, "type": "Link"},
   {"hidden": 0, "is_query_report": 0, "label": "Lease Departments", "link_count": 0, "link_to": "Lease Department", "link_type": "DocType", "onboard": 0, "type": "Link"},
@@ -36,7 +41,15 @@
  "modified_by": "Administrator",
  "module": "Rent Renewal Tracker",
  "name": "Rent Renewal Tracker",
- "number_cards": [],
+ "number_cards": [
+  {"label": "Expiring in 30 Days", "number_card_name": "Expiring in 30 Days"},
+  {"label": "Expiring in 60 Days", "number_card_name": "Expiring in 60 Days"},
+  {"label": "Expiring in 90 Days", "number_card_name": "Expiring in 90 Days"},
+  {"label": "Renewals Waiting for Me", "number_card_name": "Renewals Waiting for Me"},
+  {"label": "Overdue Rent Obligations", "number_card_name": "Overdue Rent Obligations"},
+  {"label": "Failed Reminders", "number_card_name": "Failed Reminders"},
+  {"label": "Annual Rent Exposure", "number_card_name": "Annual Rent Exposure"}
+ ],
  "owner": "Administrator",
  "parent_page": "",
  "public": 1,
@@ -63,4 +76,3 @@
  "title": "Rent Renewal Tracker",
  "type": "Workspace"
 }
-

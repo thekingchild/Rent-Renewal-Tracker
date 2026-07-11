@@ -3,7 +3,7 @@
  "creation": "2026-07-10 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["defaults_section", "default_reminder_policy", "expiring_soon_threshold", "default_currency", "timezone", "delivery_section", "email_sender", "reminder_retry_limit", "administrator_error_recipients", "automation_section", "auto_create_renewal_request"],
+ "field_order": ["defaults_section", "default_reminder_policy", "expiring_soon_threshold", "default_currency", "timezone", "delivery_section", "email_sender", "reminder_retry_limit", "administrator_error_recipients", "automation_section", "auto_create_renewal_request", "digest_section", "weekly_digest_enabled", "weekly_digest_recipients"],
  "fields": [
   {"fieldname": "defaults_section", "fieldtype": "Section Break", "label": "Defaults"},
   {"fieldname": "default_reminder_policy", "fieldtype": "Link", "label": "Default Reminder Policy", "options": "Reminder Policy", "description": "Policy used when a lease does not specify one explicitly."},
@@ -15,7 +15,10 @@
   {"default": "2", "fieldname": "reminder_retry_limit", "fieldtype": "Int", "label": "Reminder Retry Limit", "non_negative": 1, "reqd": 1, "description": "Maximum number of resend attempts for a failed reminder."},
   {"fieldname": "administrator_error_recipients", "fieldtype": "Small Text", "label": "Administrator Error Recipients", "description": "Comma-separated recipients for reminder delivery failures."},
   {"fieldname": "automation_section", "fieldtype": "Section Break", "label": "Automation"},
-  {"default": "0", "fieldname": "auto_create_renewal_request", "fieldtype": "Check", "label": "Create Renewal Request at First Threshold", "description": "Automatically create a renewal request when the first reminder threshold is reached."}
+  {"default": "0", "fieldname": "auto_create_renewal_request", "fieldtype": "Check", "label": "Create Renewal Request at First Threshold", "description": "Automatically create a renewal request when the first reminder threshold is reached."},
+  {"fieldname": "digest_section", "fieldtype": "Section Break", "label": "Weekly Management Digest"},
+  {"default": "0", "fieldname": "weekly_digest_enabled", "fieldtype": "Check", "label": "Enable Weekly Management Digest", "description": "Send a weekly summary of expiries, approvals, overdue payments, reminder failures, and rent exposure."},
+  {"depends_on": "weekly_digest_enabled", "fieldname": "weekly_digest_recipients", "fieldtype": "Small Text", "label": "Weekly Digest Recipients", "description": "Comma-separated email addresses that receive the weekly management summary."}
  ],
  "index_web_pages_for_search": 0,
  "issingle": 1,

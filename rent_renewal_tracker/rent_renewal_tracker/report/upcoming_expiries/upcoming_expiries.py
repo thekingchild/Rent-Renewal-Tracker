@@ -38,7 +38,21 @@ def execute(filters=None):
     for row in rows:
         row.days_to_expiry = date_diff(row.end_date, today())
 
-    return get_columns(), rows
+    buckets = ((0, 30), (31, 60), (61, 90))
+    values = [
+        sum(1 for row in rows if lower <= row.days_to_expiry <= upper)
+        for lower, upper in buckets
+    ]
+    chart = {
+        "data": {
+            "labels": [_("0-30 Days"), _("31-60 Days"), _("61-90 Days")],
+            "datasets": [{"name": _("Leases"), "values": values}],
+        },
+        "type": "bar",
+        "colors": ["#d97706"],
+    }
+    message = None if rows else _("No leases expire within the selected date range.")
+    return get_columns(), rows, message, chart
 
 
 def get_columns():

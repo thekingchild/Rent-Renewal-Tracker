@@ -3,6 +3,9 @@ from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
 
 from rent_renewal_tracker.reminders import process_due_reminders
+from rent_renewal_tracker.rent_renewal_tracker.report.my_actions.my_actions import (
+    execute as my_actions,
+)
 from rent_renewal_tracker.rent_renewal_tracker.report.reminder_delivery.reminder_delivery import (
     execute as reminder_delivery,
 )
@@ -60,13 +63,14 @@ class TestOperationalReports(IntegrationTestCase):
         ).insert()
 
     def test_upcoming_expiries_returns_permitted_lease(self):
-        columns, rows = upcoming_expiries(
+        columns, rows, _, chart = upcoming_expiries(
             {"from_date": today(), "to_date": add_days(today(), 90)}
         )
 
         self.assertIn("days_to_expiry", {column["fieldname"] for column in columns})
         row = next(row for row in rows if row.name == self.lease.name)
         self.assertEqual(row.days_to_expiry, 60)
+        self.assertEqual(chart["data"]["datasets"][0]["values"], [0, 1, 0])
 
     def test_renewal_pipeline_returns_snapshot_and_age(self):
         renewal = frappe.get_doc(
@@ -79,11 +83,12 @@ class TestOperationalReports(IntegrationTestCase):
             }
         ).insert()
 
-        _, rows = renewal_pipeline({})
+        _, rows, _, chart = renewal_pipeline({})
         row = next(row for row in rows if row.name == renewal.name)
         self.assertEqual(row.workflow_state, "Draft")
         self.assertEqual(row.proposed_annual_rent, 1200000)
         self.assertEqual(row.age_days, 0)
+        self.assertEqual(chart["data"]["datasets"][0]["values"][0], 1)
 
     def test_upcoming_payments_returns_calculated_total(self):
         schedule = frappe.get_doc(
@@ -129,3 +134,9 @@ class TestOperationalReports(IntegrationTestCase):
         self.assertEqual(chart["data"]["datasets"][0]["values"], [2, 0, 0])
         self.assertEqual(summary[0]["value"], 2)
 
+    def test_my_actions_includes_assigned_expiry(self):
+        _, rows, _ = my_actions({"action_type": "Lease Expiry"})
+
+        row = next(row for row in rows if row.reference_name == self.lease.name)
+        self.assertEqual(row.reference_doctype, "Lease")
+        self.assertEqual(row.priority, "Medium")

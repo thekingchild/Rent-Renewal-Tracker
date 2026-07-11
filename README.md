@@ -19,6 +19,7 @@ The first application slice provides:
 - Configurable expiry thresholds, overdue escalation, queued delivery, retries, and reminder logs.
 - A permission-aware Frappe Apps entry, operational Workspace, calendars, and status indicators.
 - Upcoming Expiries, Renewal Pipeline, Upcoming Payments, Rent Exposure, and Reminder Delivery reports.
+- A permission-aware operational dashboard, My Actions queue, setup-readiness checklist, and optional weekly management digest.
 - Frappe integration tests for the core lease rules.
 
 The complete delivery scope and phased plan are in

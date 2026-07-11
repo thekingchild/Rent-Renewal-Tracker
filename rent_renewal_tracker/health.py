@@ -1,6 +1,12 @@
 import frappe
 
-from rent_renewal_tracker.install import APP_ROLES, WORKFLOW_ACTIONS, WORKFLOW_STATES
+from rent_renewal_tracker.install import (
+    APP_ROLES,
+    DASHBOARD_CHARTS,
+    NUMBER_CARDS,
+    WORKFLOW_ACTIONS,
+    WORKFLOW_STATES,
+)
 
 
 REQUIRED_DOCTYPES = (
@@ -26,6 +32,8 @@ REQUIRED_REPORTS = (
     "Upcoming Payments",
     "Rent Exposure",
     "Reminder Delivery",
+    "My Actions",
+    "Setup Readiness",
 )
 
 
@@ -53,6 +61,14 @@ def verify_installation():
         ),
         "workspace": bool(frappe.db.exists("Workspace", "Rent Renewal Tracker")),
         "reports": all(frappe.db.exists("Report", name) for name in REQUIRED_REPORTS),
+        "dashboard_cards": all(
+            frappe.db.exists("Number Card", {"label": label})
+            for label, _, _, _ in NUMBER_CARDS
+        ),
+        "dashboard_charts": all(
+            frappe.db.exists("Dashboard Chart", name)
+            for name, _ in DASHBOARD_CHARTS
+        ),
     }
     failed = [name for name, passed in checks.items() if not passed]
     if failed:

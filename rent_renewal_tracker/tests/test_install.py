@@ -3,7 +3,13 @@ from frappe.tests import IntegrationTestCase
 
 from rent_renewal_tracker.api import has_app_permission
 from rent_renewal_tracker.health import verify_installation
-from rent_renewal_tracker.install import APP_ROLES, WORKFLOW_ACTIONS, WORKFLOW_STATES
+from rent_renewal_tracker.install import (
+    APP_ROLES,
+    DASHBOARD_CHARTS,
+    NUMBER_CARDS,
+    WORKFLOW_ACTIONS,
+    WORKFLOW_STATES,
+)
 
 
 class TestInstallationDefaults(IntegrationTestCase):
@@ -53,3 +59,19 @@ class TestInstallationDefaults(IntegrationTestCase):
         checks = verify_installation()
 
         self.assertTrue(all(checks.values()))
+
+    def test_dashboard_assets_exist(self):
+        for label, method, document_type, _ in NUMBER_CARDS:
+            self.assertTrue(
+                frappe.db.exists(
+                    "Number Card",
+                    {"label": label, "method": method, "document_type": document_type},
+                )
+            )
+        for chart_name, report_name in DASHBOARD_CHARTS:
+            self.assertTrue(
+                frappe.db.exists(
+                    "Dashboard Chart",
+                    {"name": chart_name, "report_name": report_name},
+                )
+            )

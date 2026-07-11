@@ -1,7 +1,8 @@
 # Rent Renewal Tracker User Guide
 
-Version: 1.0  
-Prepared: 10 July 2026
+Version: 1.1
+
+Prepared: 11 July 2026
 
 ## 1. Purpose
 
@@ -50,6 +51,10 @@ After signing in to Frappe:
    - `Payments`
    - `Documents`
 
+The dashboard also shows permission-aware cards for upcoming expiries, renewals waiting for
+the current user, overdue rent, failed reminders, and annual rent exposure. Select a card to
+open the corresponding filtered report.
+
 The workspace also groups links under three sections:
 
 - `Operations`
@@ -62,6 +67,7 @@ The workspace also groups links under three sections:
 
 Use this section for day-to-day records:
 
+- `My Actions`
 - `Leases`
 - `Renewal Requests`
 - `Rent Schedules`
@@ -71,6 +77,7 @@ Use this section for day-to-day records:
 
 Use this section for master data and reminder controls:
 
+- `Setup Readiness`
 - `Properties`
 - `Landlords`
 - `Lease Departments`
@@ -102,6 +109,10 @@ For a new implementation, create records in this order:
 8. `Rent Schedules`
 
 This order reduces lookup errors while creating transactional records.
+
+Use `Setup Readiness` to confirm that departments, assigned users, a reminder policy, outgoing
+email, properties, and leases are configured. The weekly management digest is optional and is
+enabled from `Rent Renewal Settings` after valid recipient email addresses are entered.
 
 ## 7. Master Data Setup
 

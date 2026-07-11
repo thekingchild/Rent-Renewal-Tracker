@@ -6,6 +6,7 @@ from frappe.utils import add_days, today
 
 from rent_renewal_tracker.reminder_rules import determine_due_threshold
 from rent_renewal_tracker.reminders import deliver_reminder, process_due_reminders
+from rent_renewal_tracker.weekly_digest import send_weekly_management_digest
 
 
 class TestReminderEngine(IntegrationTestCase):
@@ -165,3 +166,26 @@ class TestReminderEngine(IntegrationTestCase):
         log.error_summary = "tampered"
 
         self.assertRaises(frappe.ValidationError, log.save)
+
+    def test_weekly_digest_is_opt_in(self):
+        settings = frappe.get_single("Rent Renewal Settings")
+        settings.weekly_digest_enabled = 0
+        settings.save()
+
+        with patch("frappe.sendmail") as sendmail:
+            self.assertIsNone(send_weekly_management_digest())
+
+        sendmail.assert_not_called()
+
+    def test_weekly_digest_sends_summary_to_configured_recipients(self):
+        settings = frappe.get_single("Rent Renewal Settings")
+        settings.weekly_digest_enabled = 1
+        settings.weekly_digest_recipients = "management@example.com"
+        settings.save()
+
+        with patch("frappe.sendmail") as sendmail:
+            context = send_weekly_management_digest()
+
+        self.assertTrue(context.expiring)
+        sendmail.assert_called_once()
+        self.assertEqual(sendmail.call_args.kwargs["recipients"], ["management@example.com"])
