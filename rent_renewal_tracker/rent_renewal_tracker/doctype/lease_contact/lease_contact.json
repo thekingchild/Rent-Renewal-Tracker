@@ -6,13 +6,13 @@
  "engine": "InnoDB",
  "field_order": ["contact_type", "contact_name", "organization", "email", "phone", "receives_reminders", "notes"],
  "fields": [
-  {"fieldname": "contact_type", "fieldtype": "Select", "in_list_view": 1, "label": "Contact Type", "options": "Landlord\nLegal\nFacility\nFinance\nEscalation\nOther", "reqd": 1},
-  {"fieldname": "contact_name", "fieldtype": "Data", "in_list_view": 1, "label": "Name", "reqd": 1},
-  {"fieldname": "organization", "fieldtype": "Data", "label": "Organization"},
-  {"fieldname": "email", "fieldtype": "Data", "in_list_view": 1, "label": "Email", "options": "Email"},
-  {"fieldname": "phone", "fieldtype": "Data", "label": "Phone", "options": "Phone"},
-  {"default": "0", "fieldname": "receives_reminders", "fieldtype": "Check", "in_list_view": 1, "label": "Receives Reminders"},
-  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+  {"fieldname": "contact_type", "fieldtype": "Select", "in_list_view": 1, "label": "Contact Type", "options": "Landlord\nLegal\nFacility\nFinance\nEscalation\nOther", "reqd": 1, "description": "Role or contact category for this person."},
+  {"fieldname": "contact_name", "fieldtype": "Data", "in_list_view": 1, "label": "Name", "reqd": 1, "description": "Full name of the contact person."},
+  {"fieldname": "organization", "fieldtype": "Data", "label": "Organization", "description": "Company or department this contact belongs to."},
+  {"fieldname": "email", "fieldtype": "Data", "in_list_view": 1, "label": "Email", "options": "Email", "description": "Email address for correspondence or reminder delivery."},
+  {"fieldname": "phone", "fieldtype": "Data", "label": "Phone", "options": "Phone", "description": "Phone number for direct contact."},
+  {"default": "0", "fieldname": "receives_reminders", "fieldtype": "Check", "in_list_view": 1, "label": "Receives Reminders", "description": "Marks the contact as eligible for reminder notifications."},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes", "description": "Additional context about the contact or preferred communication."}
  ],
  "index_web_pages_for_search": 0,
  "istable": 1,
@@ -27,4 +27,3 @@
  "sort_order": "ASC",
  "states": []
 }
-

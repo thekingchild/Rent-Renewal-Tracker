@@ -7,18 +7,18 @@
  "engine": "InnoDB",
  "field_order": ["policy_name", "enabled", "schedule_section", "thresholds", "overdue_cadence_days", "delivery_section", "email_enabled", "system_notification_enabled", "recipients", "template_section", "subject_template", "message_template"],
  "fields": [
-  {"fieldname": "policy_name", "fieldtype": "Data", "in_list_view": 1, "label": "Policy Name", "reqd": 1, "unique": 1},
-  {"default": "1", "fieldname": "enabled", "fieldtype": "Check", "in_list_view": 1, "label": "Enabled"},
+  {"fieldname": "policy_name", "fieldtype": "Data", "in_list_view": 1, "label": "Policy Name", "reqd": 1, "unique": 1, "description": "Friendly name for the reminder policy configuration."},
+  {"default": "1", "fieldname": "enabled", "fieldtype": "Check", "in_list_view": 1, "label": "Enabled", "description": "Controls whether this policy is used when scheduling reminders."},
   {"fieldname": "schedule_section", "fieldtype": "Section Break", "label": "Schedule"},
-  {"fieldname": "thresholds", "fieldtype": "Table", "label": "Reminder Thresholds", "options": "Reminder Threshold", "reqd": 1},
-  {"default": "7", "fieldname": "overdue_cadence_days", "fieldtype": "Int", "label": "Overdue Cadence (Days)", "non_negative": 1, "reqd": 1},
+  {"fieldname": "thresholds", "fieldtype": "Table", "label": "Reminder Thresholds", "options": "Reminder Threshold", "reqd": 1, "description": "Days-before-expiry checkpoints used to queue reminders."},
+  {"default": "7", "fieldname": "overdue_cadence_days", "fieldtype": "Int", "label": "Overdue Cadence (Days)", "non_negative": 1, "reqd": 1, "description": "How often overdue reminders repeat after expiry."},
   {"fieldname": "delivery_section", "fieldtype": "Section Break", "label": "Delivery"},
-  {"default": "1", "fieldname": "email_enabled", "fieldtype": "Check", "label": "Email Enabled"},
-  {"default": "1", "fieldname": "system_notification_enabled", "fieldtype": "Check", "label": "System Notification Enabled"},
-  {"fieldname": "recipients", "fieldtype": "Table", "label": "Recipients", "options": "Reminder Recipient", "reqd": 1},
+  {"default": "1", "fieldname": "email_enabled", "fieldtype": "Check", "label": "Email Enabled", "description": "Sends reminders by email when enabled."},
+  {"default": "1", "fieldname": "system_notification_enabled", "fieldtype": "Check", "label": "System Notification Enabled", "description": "Creates in-app notifications when enabled."},
+  {"fieldname": "recipients", "fieldtype": "Table", "label": "Recipients", "options": "Reminder Recipient", "reqd": 1, "description": "Recipient rules that determine who receives reminders."},
   {"fieldname": "template_section", "fieldtype": "Section Break", "label": "Templates"},
-  {"default": "Lease {{ lease.name }} expires in {{ days_to_expiry }} day(s)", "fieldname": "subject_template", "fieldtype": "Data", "label": "Subject Template", "reqd": 1},
-  {"default": "<p>{{ lease.lease_title }} for {{ property_name }} ends on {{ lease.end_date }}.</p><p>Responsible officer: {{ lease.responsible_officer }}. Renewal status: {{ lease.renewal_status }}.</p><p><a href=\"{{ lease_url }}\">Open lease</a></p>", "fieldname": "message_template", "fieldtype": "Code", "label": "Message Template", "options": "HTML", "reqd": 1}
+  {"default": "Lease {{ lease.name }} expires in {{ days_to_expiry }} day(s)", "fieldname": "subject_template", "fieldtype": "Data", "label": "Subject Template", "reqd": 1, "description": "Template used to generate the reminder subject line."},
+  {"default": "<p>{{ lease.lease_title }} for {{ property_name }} ends on {{ lease.end_date }}.</p><p>Responsible officer: {{ lease.responsible_officer }}. Renewal status: {{ lease.renewal_status }}.</p><p><a href=\"{{ lease_url }}\">Open lease</a></p>", "fieldname": "message_template", "fieldtype": "Code", "label": "Message Template", "options": "HTML", "reqd": 1, "description": "HTML body template used for reminder delivery."}
  ],
  "index_web_pages_for_search": 0,
  "links": [{"link_doctype": "Reminder Log", "link_fieldname": "policy"}],
@@ -38,4 +38,3 @@
  "states": [],
  "track_changes": 1
 }
-

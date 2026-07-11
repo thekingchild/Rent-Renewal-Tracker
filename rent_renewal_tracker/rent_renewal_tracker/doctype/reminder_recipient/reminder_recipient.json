@@ -6,9 +6,9 @@
  "engine": "InnoDB",
  "field_order": ["recipient_type", "recipient_value", "scope"],
  "fields": [
-  {"fieldname": "recipient_type", "fieldtype": "Select", "in_list_view": 1, "label": "Recipient Type", "options": "Lease User Field\nLease Contact Type\nRole\nExplicit User\nEmail", "reqd": 1},
-  {"fieldname": "recipient_value", "fieldtype": "Data", "in_list_view": 1, "label": "Recipient Value", "reqd": 1},
-  {"default": "All", "fieldname": "scope", "fieldtype": "Select", "in_list_view": 1, "label": "Scope", "options": "All\nPre-Expiry\nExpiry\nOverdue", "reqd": 1}
+  {"fieldname": "recipient_type", "fieldtype": "Select", "in_list_view": 1, "label": "Recipient Type", "options": "Lease User Field\nLease Contact Type\nRole\nExplicit User\nEmail", "reqd": 1, "description": "Rule type that determines how recipients are resolved."},
+  {"fieldname": "recipient_value", "fieldtype": "Data", "in_list_view": 1, "label": "Recipient Value", "reqd": 1, "description": "Value used by the selected recipient type, such as a role or email address."},
+  {"default": "All", "fieldname": "scope", "fieldtype": "Select", "in_list_view": 1, "label": "Scope", "options": "All\nPre-Expiry\nExpiry\nOverdue", "reqd": 1, "description": "Reminder stage when this recipient rule should apply."}
  ],
  "index_web_pages_for_search": 0,
  "istable": 1,

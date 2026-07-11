@@ -6,12 +6,12 @@
  "engine": "InnoDB",
  "field_order": ["from_state", "action", "to_state", "actor", "acted_on", "comment"],
  "fields": [
-  {"fieldname": "from_state", "fieldtype": "Data", "in_list_view": 1, "label": "From State", "read_only": 1},
-  {"fieldname": "action", "fieldtype": "Data", "in_list_view": 1, "label": "Action", "read_only": 1},
-  {"fieldname": "to_state", "fieldtype": "Data", "in_list_view": 1, "label": "To State", "read_only": 1},
-  {"fieldname": "actor", "fieldtype": "Link", "in_list_view": 1, "label": "Actor", "options": "User", "read_only": 1},
-  {"fieldname": "acted_on", "fieldtype": "Datetime", "in_list_view": 1, "label": "Acted On", "read_only": 1},
-  {"fieldname": "comment", "fieldtype": "Small Text", "label": "Comment", "read_only": 1}
+  {"fieldname": "from_state", "fieldtype": "Data", "in_list_view": 1, "label": "From State", "read_only": 1, "description": "Workflow state before the decision was taken."},
+  {"fieldname": "action", "fieldtype": "Data", "in_list_view": 1, "label": "Action", "read_only": 1, "description": "Action recorded in the workflow transition."},
+  {"fieldname": "to_state", "fieldtype": "Data", "in_list_view": 1, "label": "To State", "read_only": 1, "description": "Workflow state after the decision was applied."},
+  {"fieldname": "actor", "fieldtype": "Link", "in_list_view": 1, "label": "Actor", "options": "User", "read_only": 1, "description": "User who performed the workflow action."},
+  {"fieldname": "acted_on", "fieldtype": "Datetime", "in_list_view": 1, "label": "Acted On", "read_only": 1, "description": "Timestamp when the action was taken."},
+  {"fieldname": "comment", "fieldtype": "Small Text", "label": "Comment", "read_only": 1, "description": "Comment captured with the workflow transition."}
  ],
  "index_web_pages_for_search": 0,
  "istable": 1,

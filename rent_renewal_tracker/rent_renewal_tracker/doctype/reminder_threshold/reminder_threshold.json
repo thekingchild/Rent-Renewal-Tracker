@@ -6,9 +6,9 @@
  "engine": "InnoDB",
  "field_order": ["days_before_expiry", "label", "enabled"],
  "fields": [
-  {"fieldname": "days_before_expiry", "fieldtype": "Int", "in_list_view": 1, "label": "Days Before Expiry", "non_negative": 1, "reqd": 1},
-  {"fieldname": "label", "fieldtype": "Data", "in_list_view": 1, "label": "Label", "reqd": 1},
-  {"default": "1", "fieldname": "enabled", "fieldtype": "Check", "in_list_view": 1, "label": "Enabled"}
+  {"fieldname": "days_before_expiry", "fieldtype": "Int", "in_list_view": 1, "label": "Days Before Expiry", "non_negative": 1, "reqd": 1, "description": "Number of days before expiry when this reminder should trigger."},
+  {"fieldname": "label", "fieldtype": "Data", "in_list_view": 1, "label": "Label", "reqd": 1, "description": "Short name for the threshold, such as Early Warning or Final Notice."},
+  {"default": "1", "fieldname": "enabled", "fieldtype": "Check", "in_list_view": 1, "label": "Enabled", "description": "Turns this threshold on or off within the policy."}
  ],
  "index_web_pages_for_search": 0,
  "istable": 1,
@@ -23,4 +23,3 @@
  "sort_order": "ASC",
  "states": []
 }
-
