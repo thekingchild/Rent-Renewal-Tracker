@@ -18,6 +18,19 @@ class ReminderPolicy(Document):
         self.validate_recipients()
         if not self.email_enabled and not self.system_notification_enabled:
             frappe.throw(_("At least one reminder channel must be enabled."))
+        self.validate_templates()
+
+    def validate_templates(self):
+        context = {
+            "lease": frappe._dict(name="LEASE-TEST", lease_title="Test Lease", end_date="2099-12-31", responsible_officer="test@example.com", renewal_status="Not Started"),
+            "property_name": "Test Property", "days_to_expiry": 90,
+            "lease_url": "https://example.invalid",
+        }
+        for fieldname in ("subject_template", "message_template"):
+            try:
+                frappe.render_template(self.get(fieldname) or "", context)
+            except Exception as exc:
+                frappe.throw(_("Invalid {0}: {1}").format(self.meta.get_label(fieldname), exc))
 
     def validate_thresholds(self):
         enabled = [row.days_before_expiry for row in self.thresholds if row.enabled]

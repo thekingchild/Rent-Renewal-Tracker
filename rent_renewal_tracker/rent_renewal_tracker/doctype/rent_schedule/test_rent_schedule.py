@@ -70,7 +70,8 @@ class TestRentSchedule(IntegrationTestCase):
 
     def test_paid_status_takes_precedence_over_due_date(self):
         schedule = self.make_schedule(
-            due_date=add_days(today(), -10), payment_status="Paid", paid_on=today()
+            due_date=add_days(today(), -10), payment_status="Paid", paid_on=today(),
+            payment_reference="TEST-PAID-001",
         ).insert()
 
         self.assertEqual(schedule.schedule_status, "Paid")
@@ -84,4 +85,3 @@ class TestRentSchedule(IntegrationTestCase):
         schedule = self.make_schedule(period_to=add_days(self.lease.end_date, 1))
 
         self.assertRaises(frappe.ValidationError, schedule.insert)
-

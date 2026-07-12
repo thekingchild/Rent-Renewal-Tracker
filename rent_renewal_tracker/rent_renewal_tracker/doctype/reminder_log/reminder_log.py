@@ -4,8 +4,9 @@ from frappe.model.document import Document
 
 
 ALLOWED_STATUS_TRANSITIONS = {
-    "Queued": {"Sent", "Failed"},
-    "Failed": {"Queued", "Sent"},
+    "Queued": {"Sending"},
+    "Sending": {"Sent", "Failed"},
+    "Failed": {"Sending"},
 }
 
 
@@ -31,4 +32,3 @@ class ReminderLog(Document):
     def on_trash(self):
         if not getattr(frappe.flags, "in_uninstall", False):
             frappe.throw(_("Reminder Logs are audit records and cannot be deleted."))
-
