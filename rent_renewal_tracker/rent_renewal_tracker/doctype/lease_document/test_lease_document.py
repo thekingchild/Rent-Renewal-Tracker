@@ -125,3 +125,37 @@ class TestLeaseDocument(IntegrationTestCase):
         )
 
         self.assertRaises(frappe.ValidationError, document.insert)
+
+    def test_derives_expiry_attention_status(self):
+        file_doc = self.make_file(is_private=1)
+        document = self.make_document(
+            file_doc.file_url, expiry_date=add_days(today(), -1)
+        ).insert()
+
+        self.assertEqual(document.document_status, "Expired")
+        self.assertEqual(document.revision_number, 1)
+        self.assertEqual(document.revision_status, "Current")
+
+    def test_new_revision_supersedes_previous_document(self):
+        original_file = self.make_file(is_private=1)
+        original = self.make_document(original_file.file_url).insert()
+        revision_file = self.make_file(is_private=1)
+        revision = self.make_document(
+            revision_file.file_url,
+            previous_revision=original.name,
+            revision_reason="Executed terms replaced the earlier copy.",
+        ).insert()
+
+        original.reload()
+        self.assertEqual(revision.revision_number, 2)
+        self.assertEqual(revision.document_family_id, original.document_family_id)
+        self.assertEqual(original.revision_status, "Superseded")
+        self.assertEqual(original.document_status, "Superseded")
+
+    def test_existing_file_cannot_be_replaced_in_place(self):
+        original_file = self.make_file(is_private=1)
+        document = self.make_document(original_file.file_url).insert()
+        replacement = self.make_file(is_private=1)
+        document.file = replacement.file_url
+
+        self.assertRaises(frappe.ValidationError, document.save)

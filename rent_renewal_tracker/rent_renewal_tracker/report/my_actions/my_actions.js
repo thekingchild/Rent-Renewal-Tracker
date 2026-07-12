@@ -4,7 +4,7 @@ frappe.query_reports["My Actions"] = {
 			fieldname: "action_type",
 			label: __("Action Type"),
 			fieldtype: "Select",
-			options: "\nRenewal Approval\nOverdue Payment\nLease Expiry\nFailed Reminder",
+			options: "\nRenewal Approval\nOverdue Payment\nLease Expiry\nDocument Expiry\nFailed Reminder",
 		},
 		{
 			fieldname: "priority",

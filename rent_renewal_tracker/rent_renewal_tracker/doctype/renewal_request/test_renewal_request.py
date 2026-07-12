@@ -91,6 +91,29 @@ class TestRenewalRequest(IntegrationTestCase):
 
         self.assertEqual(renewal.proposed_annual_rent, 1500000)
 
+    def test_termination_draft_does_not_require_future_terms(self):
+        request = self.make_request(
+            recommendation="Terminate",
+            proposed_property=None,
+            proposed_start_date=None,
+            proposed_end_date=None,
+            proposed_currency=None,
+            proposed_rent_basis=None,
+            proposed_payment_frequency=None,
+        ).insert()
+
+        self.assertEqual(request.workflow_state, "Draft")
+        self.assertEqual(
+            frappe.db.get_value("Lease", self.lease.name, "lease_status"),
+            "Termination in Progress",
+        )
+
+    def test_termination_requires_outcome_fields_before_review(self):
+        request = self.make_request(recommendation="Terminate").insert()
+        request.workflow_state = "Department Review"
+
+        self.assertRaises(frappe.ValidationError, request.save)
+
     def test_successor_lease_creation_is_idempotent(self):
         renewal = self.make_request().insert()
 

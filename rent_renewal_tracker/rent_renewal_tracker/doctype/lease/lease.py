@@ -6,6 +6,7 @@ from frappe.utils import add_days, date_diff, flt, getdate, today
 
 FINAL_STATUSES = {"Renewed", "Terminated"}
 RENEWAL_IN_PROGRESS = {"Draft", "Pending Approval", "Approved"}
+LIFECYCLE_ELIGIBLE_STATUSES = {"Active", "Expiring Soon", "Expired"}
 
 
 class Lease(Document):
@@ -81,7 +82,7 @@ class Lease(Document):
         self.set_derived_status()
 
     def set_derived_status(self):
-        if not self.end_date or self.lease_status in FINAL_STATUSES:
+        if not self.end_date or self.lease_status in FINAL_STATUSES or self.lease_status == "Termination in Progress":
             return
 
         if self.renewal_status in RENEWAL_IN_PROGRESS:
@@ -104,7 +105,7 @@ class Lease(Document):
         return 90
 
     def validate_active_requirements(self):
-        if self.lease_status not in {"Active", "Expiring Soon", "Renewal in Progress"}:
+        if self.lease_status not in {"Active", "Expiring Soon", "Renewal in Progress", "Termination in Progress"}:
             return
 
         self.validate_required_terms()
@@ -125,3 +126,38 @@ class Lease(Document):
 
         if missing:
             frappe.throw(_("Submitted or active leases require: {0}.").format(", ".join(missing)))
+
+
+@frappe.whitelist()
+def start_lifecycle_request(lease, action):
+    """Start, or return, the single open renewal/termination process for a lease."""
+    if action not in {"Renew", "Terminate"}:
+        frappe.throw(_("Action must be Renew or Terminate."))
+
+    doc = frappe.get_doc("Lease", lease)
+    doc.check_permission("read")
+    if doc.docstatus != 1 or doc.lease_status not in LIFECYCLE_ELIGIBLE_STATUSES:
+        frappe.throw(_("Only submitted active, expiring, or expired leases can start this action."))
+
+    existing = frappe.db.get_value(
+        "Renewal Request", {"open_cycle_key": doc.name}, ["name", "recommendation"], as_dict=True
+    )
+    if existing:
+        if existing.recommendation != action:
+            frappe.throw(
+                _("Open {0} request {1} must be completed or cancelled first.").format(
+                    existing.recommendation, existing.name
+                )
+            )
+        return existing.name
+
+    request = frappe.get_doc(
+        {
+            "doctype": "Renewal Request",
+            "lease": doc.name,
+            "recommendation": action,
+            "business_justification": _("Lifecycle request initiated from lease {0}.").format(doc.name),
+        }
+    )
+    request.insert()
+    return request.name

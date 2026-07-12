@@ -6,6 +6,7 @@ frappe.listview_settings["Lease"] = {
 			Active: "green",
 			"Expiring Soon": "orange",
 			"Renewal in Progress": "blue",
+			"Termination in Progress": "orange",
 			Renewed: "green",
 			Expired: "red",
 			Terminated: "gray",
@@ -14,4 +15,3 @@ frappe.listview_settings["Lease"] = {
 		return [__(status), colors[status] || "gray", `lease_status,=,${status}`];
 	},
 };
-

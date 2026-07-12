@@ -14,6 +14,7 @@ def execute(filters=None):
     rows.extend(get_renewal_actions())
     rows.extend(get_overdue_payment_actions())
     rows.extend(get_expiry_actions())
+    rows.extend(get_document_expiry_actions())
     rows.extend(get_failed_reminder_actions())
 
     if filters.action_type:
@@ -154,6 +155,30 @@ def get_failed_reminder_actions():
             age_days=date_diff(today(), row.scheduled_date) if row.scheduled_date else 0,
             assigned_to=None,
             description=row.error_summary or _("Reminder delivery failed"),
+        )
+        for row in rows
+    ]
+
+
+def get_document_expiry_actions():
+    rows = frappe.get_list(
+        "Lease Document",
+        filters={"document_status": ["in", ["Expiring Soon", "Expired"]]},
+        fields=["name", "lease", "title", "expiry_date", "document_status"],
+        order_by="expiry_date asc",
+        limit_page_length=0,
+    )
+    return [
+        frappe._dict(
+            action_type="Document Expiry",
+            priority="Critical" if row.document_status == "Expired" else "High",
+            reference_doctype="Lease Document",
+            reference_name=row.name,
+            lease=row.lease,
+            due_date=row.expiry_date,
+            age_days=date_diff(row.expiry_date, today()) if row.expiry_date else 0,
+            assigned_to=None,
+            description=_("{0}: {1}").format(row.title, row.document_status),
         )
         for row in rows
     ]

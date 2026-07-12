@@ -3,7 +3,7 @@ from pathlib import PurePosixPath
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import getdate
+from frappe.utils import date_diff, getdate, now_datetime, today
 
 
 ALLOWED_EXTENSIONS = {
@@ -19,6 +19,9 @@ ALLOWED_EXTENSIONS = {
 
 
 class LeaseDocument(Document):
+    def before_insert(self):
+        self.set_revision_identity()
+
     def validate(self):
         if (
             self.expiry_date
@@ -26,14 +29,83 @@ class LeaseDocument(Document):
             and getdate(self.expiry_date) < getdate(self.effective_date)
         ):
             frappe.throw(_("Expiry Date cannot be earlier than Effective Date."))
+        self.validate_immutable_file()
+        self.validate_revision()
+        self.set_document_status()
         self.validate_private_file()
 
     def after_insert(self):
         self.attach_file_to_document()
+        self.supersede_previous_revision()
 
     def on_update(self):
         if not self.is_new():
             self.attach_file_to_document()
+
+    def set_revision_identity(self):
+        self.revision_status = "Current"
+        self.revised_by = frappe.session.user
+        self.revised_on = now_datetime()
+        if self.previous_revision:
+            frappe.db.sql(
+                "select name from `tabLease Document` where name=%s for update", self.previous_revision
+            )
+            previous = frappe.get_doc("Lease Document", self.previous_revision)
+            previous.check_permission("read")
+            if previous.revision_status == "Superseded":
+                frappe.throw(_("Create a revision from the current document revision."))
+            self.document_family_id = previous.document_family_id or previous.name
+            latest = frappe.db.get_value(
+                "Lease Document", {"document_family_id": self.document_family_id},
+                "revision_number", order_by="revision_number desc"
+            ) or previous.revision_number or 1
+            self.revision_number = latest + 1
+        else:
+            self.document_family_id = self.document_family_id or self.name
+            self.revision_number = self.revision_number or 1
+
+    def validate_revision(self):
+        if not self.previous_revision:
+            return
+        previous = frappe.get_doc("Lease Document", self.previous_revision)
+        if previous.lease != self.lease:
+            frappe.throw(_("A revision must belong to the same lease as its previous revision."))
+        if not (self.revision_reason or "").strip():
+            frappe.throw(_("Revision Reason is required."))
+        if previous.file == self.file:
+            frappe.throw(_("A new revision must use a new file."))
+
+    def validate_immutable_file(self):
+        previous = self.get_doc_before_save()
+        if previous and previous.file != self.file:
+            frappe.throw(_("Create a new revision instead of replacing an existing document file."))
+
+    def set_document_status(self):
+        if self.revision_status == "Superseded":
+            self.document_status = "Superseded"
+            return
+        if not self.expiry_date:
+            self.document_status = "No Expiry Date"
+            self.days_to_document_expiry = None
+            return
+        self.days_to_document_expiry = date_diff(self.expiry_date, today())
+        threshold = frappe.db.get_single_value(
+            "Rent Renewal Settings", "document_expiring_soon_threshold", cache=True
+        ) or 30
+        if self.days_to_document_expiry < 0:
+            self.document_status = "Expired"
+        elif self.days_to_document_expiry <= threshold:
+            self.document_status = "Expiring Soon"
+        else:
+            self.document_status = "Current"
+
+    def supersede_previous_revision(self):
+        if self.previous_revision:
+            frappe.db.set_value(
+                "Lease Document", self.previous_revision,
+                {"revision_status": "Superseded", "document_status": "Superseded"},
+                update_modified=False,
+            )
 
     def get_file_record(self):
         if not self.file:

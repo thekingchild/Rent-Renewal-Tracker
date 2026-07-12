@@ -88,6 +88,22 @@ class RenewalRequest(Document):
                 self.set(fieldname, value)
 
     def validate_proposed_terms(self):
+        if flt(self.budget_impact) < 0:
+            frappe.throw(_("Budget Impact cannot be negative."))
+        if self.recommendation == "Terminate":
+            if self.workflow_state == "Draft":
+                return
+            if not self.termination_effective_date or not (self.termination_reason or "").strip():
+                frappe.throw(_("Termination Effective Date and Termination Reason are required."))
+            return
+
+        required = (
+            "proposed_property", "proposed_start_date", "proposed_end_date", "proposed_currency",
+            "proposed_rent_basis", "proposed_payment_frequency",
+        )
+        missing = [self.meta.get_label(fieldname) for fieldname in required if not self.get(fieldname)]
+        if missing and self.workflow_state != "Draft":
+            frappe.throw(_("Renewal proposals require: {0}.").format(", ".join(missing)))
         if (
             self.proposed_start_date
             and self.proposed_end_date
@@ -102,7 +118,7 @@ class RenewalRequest(Document):
         ):
             frappe.throw(_("Proposed Notice Date cannot be later than Proposed End Date."))
 
-        for fieldname in ("proposed_monthly_rent", "proposed_annual_rent", "budget_impact"):
+        for fieldname in ("proposed_monthly_rent", "proposed_annual_rent"):
             if flt(self.get(fieldname)) < 0:
                 frappe.throw(_("{0} cannot be negative.").format(self.meta.get_label(fieldname)))
 
@@ -184,13 +200,15 @@ class RenewalRequest(Document):
     def validate_completion(self):
         if self.workflow_state != "Completed":
             return
-        if not self.proposed_start_date or not self.proposed_end_date:
+        if self.recommendation != "Terminate" and (not self.proposed_start_date or not self.proposed_end_date):
             frappe.throw(_("Proposed lease dates are required before completion."))
         document_category = "Approval" if self.recommendation == "Terminate" else "Renewal Letter"
         if not frappe.db.exists("Lease Document", {
             "lease": self.lease,
+            "renewal_request": self.name,
             "category": document_category,
             "document_date": ["is", "set"],
+            "revision_status": "Current",
         }):
             frappe.throw(
                 _("A private {0} document is required before completion.").format(document_category)
@@ -200,6 +218,7 @@ class RenewalRequest(Document):
         if self.successor_lease:
             return self.successor_lease
 
+        frappe.db.sql("select name from `tabLease` where name=%s for update", self.lease)
         existing = frappe.db.get_value("Lease", {"predecessor_lease": self.lease}, "name")
         if existing:
             self.db_set("successor_lease", existing, update_modified=False)
@@ -287,7 +306,11 @@ class RenewalRequest(Document):
             }.get(self.workflow_state, "Not Started")
             values = {
                 "renewal_status": renewal_status,
-                "lease_status": "Renewed" if self.workflow_state == "Completed" else "Renewal in Progress",
+                "lease_status": (
+                    "Renewed" if self.workflow_state == "Completed"
+                    else "Termination in Progress" if self.recommendation == "Terminate"
+                    else "Renewal in Progress"
+                ),
                 "renewal_completed": self.workflow_state == "Completed",
                 "last_renewal_request": self.name,
             }

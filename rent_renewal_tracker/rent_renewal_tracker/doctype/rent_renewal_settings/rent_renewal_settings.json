@@ -3,11 +3,12 @@
  "creation": "2026-07-10 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["defaults_section", "default_reminder_policy", "expiring_soon_threshold", "default_currency", "timezone", "delivery_section", "email_sender", "reminder_retry_limit", "administrator_error_recipients", "automation_section", "auto_create_renewal_request", "digest_section", "weekly_digest_enabled", "weekly_digest_recipients"],
+ "field_order": ["defaults_section", "default_reminder_policy", "expiring_soon_threshold", "document_expiring_soon_threshold", "default_currency", "timezone", "delivery_section", "email_sender", "reminder_retry_limit", "administrator_error_recipients", "automation_section", "auto_create_renewal_request", "digest_section", "weekly_digest_enabled", "weekly_digest_recipients"],
  "fields": [
   {"fieldname": "defaults_section", "fieldtype": "Section Break", "label": "Defaults"},
   {"fieldname": "default_reminder_policy", "fieldtype": "Link", "label": "Default Reminder Policy", "options": "Reminder Policy", "description": "Policy used when a lease does not specify one explicitly."},
   {"default": "90", "fieldname": "expiring_soon_threshold", "fieldtype": "Int", "label": "Expiring Soon Threshold (Days)", "non_negative": 1, "reqd": 1, "description": "Number of days before expiry when a lease is considered expiring soon."},
+  {"default": "30", "fieldname": "document_expiring_soon_threshold", "fieldtype": "Int", "label": "Document Expiring Soon Threshold (Days)", "non_negative": 1, "reqd": 1, "description": "Number of days before expiry when a lease document needs attention."},
   {"fieldname": "default_currency", "fieldtype": "Link", "label": "Default Currency", "options": "Currency", "description": "Fallback currency for new records when one is not specified."},
   {"fieldname": "timezone", "fieldtype": "Data", "label": "Timezone", "description": "Timezone used for scheduled tasks and reminder timing."},
   {"fieldname": "delivery_section", "fieldtype": "Section Break", "label": "Delivery"},

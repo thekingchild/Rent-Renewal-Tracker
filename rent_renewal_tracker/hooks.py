@@ -24,6 +24,7 @@ scheduler_events = {
     "daily": [
         "rent_renewal_tracker.scheduled_tasks.refresh_lease_statuses",
         "rent_renewal_tracker.scheduled_tasks.refresh_rent_schedule_statuses",
+        "rent_renewal_tracker.scheduled_tasks.refresh_lease_document_statuses",
         "rent_renewal_tracker.reminders.process_due_reminders",
     ],
     "weekly": ["rent_renewal_tracker.weekly_digest.send_weekly_management_digest"],

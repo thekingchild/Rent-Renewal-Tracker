@@ -56,3 +56,19 @@ def refresh_rent_schedule_statuses():
                 status,
                 update_modified=False,
             )
+
+
+def refresh_lease_document_statuses():
+    """Refresh stored attention states without modifying document evidence."""
+    names = frappe.get_all("Lease Document", pluck="name")
+    for name in names:
+        document = frappe.get_doc("Lease Document", name)
+        document.set_document_status()
+        frappe.db.set_value(
+            "Lease Document", name,
+            {
+                "document_status": document.document_status,
+                "days_to_document_expiry": document.days_to_document_expiry,
+            },
+            update_modified=False,
+        )
