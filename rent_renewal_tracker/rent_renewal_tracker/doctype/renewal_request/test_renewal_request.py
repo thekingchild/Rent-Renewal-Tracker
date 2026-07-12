@@ -1,6 +1,6 @@
 import frappe
 from frappe.tests import IntegrationTestCase
-from frappe.utils import add_days, today
+from frappe.utils import add_days, getdate, today
 
 
 class TestRenewalRequest(IntegrationTestCase):
@@ -56,9 +56,9 @@ class TestRenewalRequest(IntegrationTestCase):
         renewal = self.make_request().insert()
 
         self.assertEqual(renewal.renewal_sequence, 1)
-        self.assertEqual(renewal.current_end_date, self.lease.end_date)
+        self.assertEqual(getdate(renewal.current_end_date), getdate(self.lease.end_date))
         self.assertEqual(renewal.current_annual_rent, 1200000)
-        self.assertEqual(renewal.proposed_start_date, add_days(self.lease.end_date, 1))
+        self.assertEqual(getdate(renewal.proposed_start_date), getdate(add_days(self.lease.end_date, 1)))
         self.assertEqual(renewal.proposed_annual_rent, 1200000)
         self.assertEqual(renewal.open_cycle_key, self.lease.name)
 
@@ -100,6 +100,6 @@ class TestRenewalRequest(IntegrationTestCase):
 
         self.assertEqual(second_name, first_name)
         self.assertEqual(successor.predecessor_lease, self.lease.name)
-        self.assertEqual(successor.start_date, add_days(self.lease.end_date, 1))
-        self.assertEqual(successor.end_date, renewal.proposed_end_date)
+        self.assertEqual(getdate(successor.start_date), getdate(add_days(self.lease.end_date, 1)))
+        self.assertEqual(getdate(successor.end_date), getdate(renewal.proposed_end_date))
         self.assertEqual(successor.annual_rent, renewal.proposed_annual_rent)

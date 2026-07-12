@@ -99,7 +99,7 @@ def setup_dashboard_defaults():
                 "type": "Custom",
                 "method": method,
                 "document_type": document_type,
-                "is_public": 1,
+                "is_public": 0,
                 "is_standard": 0,
                 "module": "Rent Renewal Tracker",
                 "show_percentage_stats": 0,
@@ -122,7 +122,7 @@ def setup_dashboard_defaults():
                 "report_name": report_name,
                 "use_report_chart": 1,
                 "filters_json": "{}",
-                "is_public": 1,
+                "is_public": 0,
                 "is_standard": 0,
                 "module": "Rent Renewal Tracker",
             }
@@ -143,7 +143,10 @@ def setup_renewal_workflow():
             "document_type": "Renewal Request",
             "is_active": 1,
             "override_status": 0,
-            "send_email_alert": 1,
+            # The app sends scoped reminders and in-app workflow notifications.
+            # Frappe's generic workflow mail attaches a PDF and can disclose the
+            # full record to every role holder, so keep it disabled.
+            "send_email_alert": 0,
             "enable_action_confirmation": 1,
             "workflow_state_field": "workflow_state",
         }
@@ -151,7 +154,7 @@ def setup_renewal_workflow():
     workflow.set(
         "states",
         [
-            {"state": "Draft", "doc_status": "0", "allow_edit": "All"},
+            {"state": "Draft", "doc_status": "0", "allow_edit": "Responsible Officer"},
             {"state": "Department Review", "doc_status": "0", "allow_edit": "Department Head"},
             {"state": "Finance Review", "doc_status": "0", "allow_edit": "Finance Approver"},
             {"state": "Legal Review", "doc_status": "0", "allow_edit": "Legal Approver"},

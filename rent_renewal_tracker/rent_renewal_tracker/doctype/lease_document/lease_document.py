@@ -8,14 +8,12 @@ from frappe.utils import getdate
 
 ALLOWED_EXTENSIONS = {
     ".csv",
-    ".doc",
     ".docx",
     ".jpeg",
     ".jpg",
     ".pdf",
     ".png",
     ".txt",
-    ".xls",
     ".xlsx",
 }
 
@@ -79,15 +77,17 @@ class LeaseDocument(Document):
             )
 
     def can_use_file(self, file_record):
+        if not frappe.has_permission("File", "read", file_record.name):
+            return False
         attached_doctype = file_record.attached_to_doctype
         attached_name = file_record.attached_to_name
         if not attached_doctype or not attached_name:
-            return True
+            return frappe.db.get_value("File", file_record.name, "owner") == frappe.session.user
         if (attached_doctype, attached_name) in {
             ("Lease", self.lease),
             ("Lease Document", self.name),
         }:
-            return True
+            return frappe.db.get_value("File", file_record.name, "owner") == frappe.session.user
 
         # Uploads made before the form is saved are attached to a temporary name.
         if attached_doctype == "Lease Document" and not frappe.db.exists(
@@ -95,9 +95,7 @@ class LeaseDocument(Document):
         ):
             return True
 
-        return frappe.has_permission("File", "read", file_record.name) and frappe.has_permission(
-            attached_doctype, "read", attached_name
-        )
+        return frappe.has_permission(attached_doctype, "read", attached_name)
 
     def attach_file_to_document(self):
         file_record = self.get_file_record()

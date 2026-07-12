@@ -12,6 +12,12 @@ class Lease(Document):
     def before_insert(self):
         self.lease_id = self.name
 
+    def after_insert(self):
+        # Frappe assigns series names after before_insert on current releases.
+        if self.lease_id != self.name:
+            self.lease_id = self.name
+            self.db_set("lease_id", self.name, update_modified=False)
+
     def before_submit(self):
         self.lease_status = "Active"
         self.calculate_derived_values()
@@ -63,7 +69,8 @@ class Lease(Document):
                 )
                 if value
             ]
-            self.next_action_date = min(action_dates, key=getdate) if action_dates else None
+            future_dates = [value for value in action_dates if getdate(value) >= getdate(today())]
+            self.next_action_date = min(future_dates, key=getdate) if future_dates else None
 
         if self.rent_basis == "Monthly" and flt(self.monthly_rent):
             self.annual_rent = flt(self.monthly_rent) * 12

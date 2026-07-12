@@ -18,7 +18,7 @@
   {"fieldname": "recipient", "fieldtype": "Data", "in_list_view": 1, "label": "Recipient", "read_only": 1, "reqd": 1, "description": "Display value for the reminder recipient."},
   {"fieldname": "recipient_user", "fieldtype": "Link", "label": "Recipient User", "options": "User", "read_only": 1, "description": "User record that received the system notification, if applicable."},
   {"fieldname": "delivery_section", "fieldtype": "Section Break", "label": "Delivery Result"},
-  {"default": "Queued", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Status", "options": "Queued\nSent\nFailed", "read_only": 1, "reqd": 1, "description": "Current delivery outcome for the reminder."},
+  {"default": "Queued", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Status", "options": "Queued\nSending\nSent\nFailed", "read_only": 1, "reqd": 1, "description": "Current delivery outcome for the reminder."},
   {"fieldname": "sent_at", "fieldtype": "Datetime", "label": "Sent At", "read_only": 1, "description": "Timestamp when the reminder was successfully sent."},
   {"default": "0", "fieldname": "retry_count", "fieldtype": "Int", "label": "Retry Count", "read_only": 1, "description": "Number of retry attempts made after a failed delivery."},
   {"fieldname": "message_id", "fieldtype": "Data", "label": "Message ID", "read_only": 1, "description": "External message or notification identifier returned by the delivery service."},

@@ -127,6 +127,8 @@ def process_due_reminders(as_of_date=None, queue_deliveries=True):
                 "rent_renewal_tracker.reminders.deliver_reminder",
                 queue="short",
                 enqueue_after_commit=True,
+                job_id=f"rent-reminder-{log_name}",
+                deduplicate=True,
                 log_name=log_name,
             )
     return queued_logs
@@ -247,7 +249,19 @@ def maybe_auto_create_renewal(lease, policy, threshold, settings):
 def deliver_reminder(log_name):
     """Deliver one reserved notification and finalize its audit record."""
     log = frappe.get_doc("Reminder Log", log_name)
-    if log.status == "Sent":
+    if log.status not in {"Queued", "Failed"}:
+        return
+
+    # Claim before performing an external side effect. A duplicate worker will
+    # observe Sending and exit instead of sending a second message.
+    frappe.db.sql(
+        "update `tabReminder Log` set status='Sending' where name=%s and status in ('Queued','Failed')",
+        log.name,
+    )
+    if frappe.db._cursor.rowcount != 1:
+        return
+    log.reload()
+    if log.status != "Sending":
         return
 
     settings = frappe.get_single("Rent Renewal Settings")
@@ -267,46 +281,45 @@ def deliver_reminder(log_name):
     last_traceback = None
     message_id = None
 
-    for attempt in range(retry_limit + 1):
-        try:
-            if log.channel == "Email":
-                result = frappe.sendmail(
-                    recipients=[log.recipient],
-                    sender=settings.email_sender or None,
-                    subject=subject,
-                    message=message,
-                    reference_doctype="Lease",
-                    reference_name=lease.name,
-                    now=True,
-                )
-                message_id = str(result)[:140] if result else None
-            else:
-                notification = frappe.get_doc(
-                    {
-                        "doctype": "Notification Log",
-                        "subject": subject,
-                        "email_content": message,
-                        "for_user": log.recipient_user,
-                        "type": "Alert",
-                        "document_type": "Lease",
-                        "document_name": lease.name,
-                        "from_user": "Administrator",
-                    }
-                ).insert(ignore_permissions=True)
-                message_id = notification.name
-            finalize_log(log, "Sent", attempt, message_id=message_id)
-            update_lease_reminder_dates(lease, policy, log.threshold)
-            return
-        except Exception as exc:
-            last_error = exc
-            last_traceback = frappe.get_traceback()
+    attempt = (log.retry_count or 0) + 1
+    try:
+        if log.channel == "Email":
+            result = frappe.sendmail(
+                recipients=[log.recipient], sender=settings.email_sender or None,
+                subject=subject, message=message, reference_doctype="Lease",
+                reference_name=lease.name, now=True,
+            )
+            message_id = str(result)[:140] if result else None
+        else:
+            notification = frappe.get_doc({
+                "doctype": "Notification Log", "subject": subject,
+                "email_content": message, "for_user": log.recipient_user,
+                "type": "Alert", "document_type": "Lease",
+                "document_name": lease.name, "from_user": "Administrator",
+            }).insert(ignore_permissions=True)
+            message_id = notification.name
+        finalize_log(log, "Sent", attempt, message_id=message_id)
+        update_lease_reminder_dates(lease, policy, log.threshold)
+        return
+    except Exception as exc:
+        last_error = exc
+        last_traceback = frappe.get_traceback()
 
-    finalize_log(log, "Failed", retry_limit, error_summary=str(last_error)[:500])
+    finalize_log(log, "Failed", attempt, error_summary=str(last_error)[:500])
     frappe.log_error(
         title=f"Lease reminder delivery failed: {log.name}",
         message=last_traceback,
     )
     notify_error_recipients(settings, log, last_error)
+    if attempt <= retry_limit:
+        frappe.enqueue(
+            "rent_renewal_tracker.reminders.deliver_reminder",
+            queue="short",
+            enqueue_after_commit=True,
+            job_id=f"rent-reminder-retry-{log.name}-{attempt}",
+            deduplicate=True,
+            log_name=log.name,
+        )
 
 
 def finalize_log(log, status, retry_count, message_id=None, error_summary=None):

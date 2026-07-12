@@ -155,9 +155,10 @@ class TestReminderEngine(IntegrationTestCase):
             deliver_reminder(log_name)
 
         log = frappe.get_doc("Reminder Log", log_name)
-        self.assertEqual(sendmail.call_count, 3)
+        # Each worker performs one external attempt; retries are separate jobs.
+        self.assertEqual(sendmail.call_count, 1)
         self.assertEqual(log.status, "Failed")
-        self.assertEqual(log.retry_count, 2)
+        self.assertEqual(log.retry_count, 1)
         self.assertIn("SMTP unavailable", log.error_summary)
 
     def test_ordinary_save_cannot_modify_audit_log(self):

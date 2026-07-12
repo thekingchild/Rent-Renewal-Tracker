@@ -51,6 +51,8 @@ class RenewalRequest(Document):
             return
 
         lease = frappe.get_doc("Lease", self.lease)
+        # Serialize cycle allocation for the lease.
+        frappe.db.sql("select name from `tabLease` where name=%s for update", self.lease)
         previous_sequence = frappe.db.get_value(
             "Renewal Request",
             {"lease": self.lease},
@@ -145,6 +147,12 @@ class RenewalRequest(Document):
         action = STATE_ACTIONS.get((from_state, to_state))
         if not action:
             frappe.throw(_("Transition from {0} to {1} is not permitted.").format(from_state, to_state))
+        from rent_renewal_tracker.permissions import can_approve_renewal
+        if not can_approve_renewal(self):
+            frappe.throw(
+                _("You are not assigned to this lease and cannot act on its renewal."),
+                frappe.PermissionError,
+            )
 
         comment = (self.workflow_comment or "").strip()
         if action in {"Return", "Reject"} and not comment:
@@ -179,7 +187,11 @@ class RenewalRequest(Document):
         if not self.proposed_start_date or not self.proposed_end_date:
             frappe.throw(_("Proposed lease dates are required before completion."))
         document_category = "Approval" if self.recommendation == "Terminate" else "Renewal Letter"
-        if not frappe.db.exists("Lease Document", {"lease": self.lease, "category": document_category}):
+        if not frappe.db.exists("Lease Document", {
+            "lease": self.lease,
+            "category": document_category,
+            "document_date": ["is", "set"],
+        }):
             frappe.throw(
                 _("A private {0} document is required before completion.").format(document_category)
             )

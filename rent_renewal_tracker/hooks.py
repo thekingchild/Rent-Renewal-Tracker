@@ -28,3 +28,18 @@ scheduler_events = {
     ],
     "weekly": ["rent_renewal_tracker.weekly_digest.send_weekly_management_digest"],
 }
+
+permission_query_conditions = {
+    "Lease": "rent_renewal_tracker.permissions.lease_query_condition",
+    "Lease Document": "rent_renewal_tracker.permissions.lease_document_query",
+    "Rent Schedule": "rent_renewal_tracker.permissions.rent_schedule_query",
+    "Renewal Request": "rent_renewal_tracker.permissions.renewal_request_query",
+    "Reminder Log": "rent_renewal_tracker.permissions.reminder_log_query",
+}
+has_permission = {
+    "Lease": "rent_renewal_tracker.permissions.lease_has_permission",
+    "Lease Document": "rent_renewal_tracker.permissions.dependent_has_permission",
+    "Rent Schedule": "rent_renewal_tracker.permissions.dependent_has_permission",
+    "Renewal Request": "rent_renewal_tracker.permissions.dependent_has_permission",
+    "Reminder Log": "rent_renewal_tracker.permissions.dependent_has_permission",
+}

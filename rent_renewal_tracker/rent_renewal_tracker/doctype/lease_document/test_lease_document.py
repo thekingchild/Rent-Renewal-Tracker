@@ -42,7 +42,7 @@ class TestLeaseDocument(IntegrationTestCase):
             }
         ).insert()
 
-    def make_file(self, *, is_private, extension="pdf"):
+    def make_file(self, *, is_private, extension="txt"):
         content = f"test-{frappe.generate_hash(length=12)}".encode()
         return save_file(
             f"lease-document-{frappe.generate_hash(length=8)}.{extension}",
@@ -78,7 +78,7 @@ class TestLeaseDocument(IntegrationTestCase):
     def test_accepts_file_uploaded_against_unsaved_document(self):
         content = f"test-{frappe.generate_hash(length=12)}".encode()
         file_doc = save_file(
-            f"lease-document-{frappe.generate_hash(length=8)}.pdf",
+            f"lease-document-{frappe.generate_hash(length=8)}.txt",
             content,
             "Lease Document",
             f"new-lease-document-{frappe.generate_hash(length=8)}",
