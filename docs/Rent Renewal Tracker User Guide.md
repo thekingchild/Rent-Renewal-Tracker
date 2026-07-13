@@ -275,6 +275,14 @@ Use this section to assign accountability:
 
 The `Region` field is auto-filled from the selected property.
 
+#### Responsible Officer versus Contract Owner
+
+The `Responsible Officer` is the required day-to-day operational owner of the lease. This user is the primary person expected to monitor dates, maintain the lease and its related records, initiate lifecycle action, and respond to reminders. The default reminder policy sends all lease-expiry reminders to this field, and operational views use it when identifying the officer responsible for an expiring lease.
+
+The `Contract Owner` is an optional additional accountable user for the underlying commercial or business relationship. Use it when business ownership sits with a different person from the officer performing routine lease administration—for example, a business-unit sponsor, property portfolio owner, or contract relationship lead. A Contract Owner receives record access to the lease and its related renewal requests, rent schedules, documents, and reminder logs. Reminder policies may also target the `contract_owner` field when explicitly configured.
+
+The application does not assign a separate approval stage or automatic reminder to the Contract Owner merely because the field is populated. Workflow authority still comes from the approver's role and lease access. If the same person performs both functions, enter that user as Responsible Officer and leave Contract Owner blank, or enter the same user in both fields if your reporting convention requires explicit business ownership.
+
 ### 10.4 Lease Contacts
 
 Contacts are entered in a child table with:
@@ -387,6 +395,24 @@ Important fields:
 - `Confidentiality`
 - `Uploaded By`
 - `Notes`
+
+### 11.1 What Document Confidentiality Means
+
+The Lease Document `Confidentiality` field labels the sensitivity of that specific file as `Internal`, `Confidential`, or `Restricted`. It is useful for records management, review, and handling instructions. It is separate from the parent Lease field named `Confidentiality Classification`, which supports `Public`, `Internal`, `Confidential`, and `Restricted`.
+
+In the current application, the document-level label does **not** independently grant or deny access. Actual access to a Lease Document is inherited from its parent Lease. A user must have Lease Document read permission and must also be authorized for the linked lease through assignment or department scope and the parent lease's confidentiality clearance. Therefore, marking a document `Restricted` while its parent lease remains `Internal` does not create an additional technical access barrier by itself.
+
+For enforceable restriction, set the parent Lease `Confidentiality Classification` to the appropriate level and review the assigned users and Lease Department User Permissions. As a data-governance practice, the document label should normally be at least as restrictive as the file's content, and the parent lease should be classified at the highest sensitivity required by any document that must not be visible to the wider lease audience.
+
+Role effects are:
+
+- `Rent Renewal System Manager` and `Lease Administrator` can read, create, edit, delete, print, email, and export Lease Document records, subject to the private-file controls. These roles are unrestricted by the lease assignment and confidentiality filter.
+- `Responsible Officer` can read, create, edit, and print documents for leases they are authorized to access, but cannot delete, email, or export them through the configured DocType permissions.
+- `Department Head`, `Finance Approver`, `Legal Approver`, and `Management Approver` have read-and-print access only when the parent lease is within their assignment or department scope and clearance.
+- `Lease Auditor` has read, print, and export access to authorized documents and has clearance for all parent-lease classifications, including Restricted; assignment or department scope still applies.
+- `Lease Viewer` has read-and-print access only to authorized documents whose parent lease is Public or Internal.
+
+Every attached file must also be private. The application checks the user's permission to use the File record, its owner or original attachment, the allowed file extension, and the site's maximum file size. These file controls work in addition to the role and parent-lease access rules.
 
 Document categories include:
 
