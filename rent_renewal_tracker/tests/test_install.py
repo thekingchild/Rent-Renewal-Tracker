@@ -1,11 +1,14 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
+from rent_renewal_tracker import hooks
 from rent_renewal_tracker.api import has_app_permission
 from rent_renewal_tracker.health import verify_installation
 from rent_renewal_tracker.install import (
     APP_ROLES,
+    COUNT_NUMBER_CARDS,
     DASHBOARD_CHARTS,
+    FIRST_RUN_BLOCK,
     NUMBER_CARDS,
     WORKFLOW_ACTIONS,
     WORKFLOW_STATES,
@@ -55,6 +58,12 @@ class TestInstallationDefaults(IntegrationTestCase):
 
         self.assertTrue(has_app_permission())
 
+    def test_apps_screen_entry_uses_same_page_desk_route(self):
+        self.assertEqual(
+            hooks.add_to_apps_screen[0]["route"],
+            "/desk/rent-renewal-tracker",
+        )
+
     def test_installation_health_contract_passes(self):
         checks = verify_installation()
 
@@ -75,3 +84,7 @@ class TestInstallationDefaults(IntegrationTestCase):
                     {"name": chart_name, "report_name": report_name},
                 )
             )
+
+        self.assertTrue(frappe.db.exists("Custom HTML Block", FIRST_RUN_BLOCK))
+        for label in COUNT_NUMBER_CARDS:
+            self.assertFalse(frappe.db.get_value("Number Card", {"label": label}, "currency"))

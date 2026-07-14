@@ -12,7 +12,7 @@ add_to_apps_screen = [
         "name": "rent_renewal_tracker",
         "logo": "/assets/rent_renewal_tracker/images/rent-renewal-tracker.svg",
         "title": "Rent Renewal Tracker",
-        "route": "/app/rent-renewal-tracker",
+        "route": "/desk/rent-renewal-tracker",
         "has_permission": "rent_renewal_tracker.api.has_app_permission",
     }
 ]

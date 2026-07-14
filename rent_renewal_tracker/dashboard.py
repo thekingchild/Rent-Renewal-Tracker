@@ -31,6 +31,46 @@ def _count(doctype, filters):
     return len(frappe.get_list(doctype, filters=filters, pluck="name", limit_page_length=0))
 
 
+def _monetary_total(
+    doctype,
+    filters,
+    amount_field,
+    route,
+    route_options=None,
+    include_currency_filter=True,
+):
+    settings = frappe.get_single("Rent Renewal Settings")
+    currency = settings.default_currency or frappe.defaults.get_global_default("currency")
+    query_filters = dict(filters)
+
+    if currency:
+        query_filters["currency"] = currency
+
+    rows = frappe.get_list(
+        doctype,
+        filters=query_filters,
+        fields=["currency", amount_field],
+        limit_page_length=0,
+    )
+    if not currency:
+        currencies = sorted({row.currency for row in rows if row.currency})
+        if len(currencies) == 1:
+            currency = currencies[0]
+        elif len(currencies) > 1:
+            return _card("Multiple currencies", route, fieldtype="Data")
+
+    options = dict(route_options or {})
+    if currency and include_currency_filter:
+        options["currency"] = currency
+    return _card(
+        sum(flt(row.get(amount_field)) for row in rows),
+        route,
+        options,
+        fieldtype="Currency",
+        currency=currency,
+    )
+
+
 def _expiring_within(days):
     return _card(
         _count(
@@ -77,17 +117,17 @@ def renewals_waiting_for_me():
 
 @frappe.whitelist()
 def overdue_rent_obligations():
-    return _card(
-        _count(
-            "Rent Schedule",
-            {
-                "due_date": ["<", today()],
-                "payment_status": ["not in", ["Paid", "Waived"]],
-                "docstatus": ["<", 2],
-            },
-        ),
+    return _monetary_total(
+        "Rent Schedule",
+        {
+            "due_date": ["<", today()],
+            "payment_status": ["not in", ["Paid", "Waived"]],
+            "docstatus": ["<", 2],
+        },
+        "total_due",
         ["query-report", "My Actions"],
         {"action_type": "Overdue Payment"},
+        include_currency_filter=False,
     )
 
 
@@ -104,34 +144,11 @@ def failed_reminders():
 
 @frappe.whitelist()
 def annual_rent_exposure():
-    settings = frappe.get_single("Rent Renewal Settings")
-    currency = settings.default_currency or frappe.defaults.get_global_default("currency")
-    filters = {"lease_status": ACTIVE_LEASE_FILTER}
-    if not currency:
-        currency_rows = frappe.get_list(
-            "Lease",
-            filters=filters,
-            fields=["currency"],
-            limit_page_length=0,
-        )
-        currencies = sorted({row.currency for row in currency_rows if row.currency})
-        if len(currencies) == 1:
-            currency = currencies[0]
-        elif len(currencies) > 1:
-            return _card(
-                "Multiple currencies",
-                ["query-report", "Rent Exposure"],
-                fieldtype="Data",
-            )
-    if currency:
-        filters["currency"] = currency
-    rows = frappe.get_list("Lease", filters=filters, fields=["annual_rent"], limit_page_length=0)
-    return _card(
-        sum(flt(row.annual_rent) for row in rows),
+    return _monetary_total(
+        "Lease",
+        {"lease_status": ACTIVE_LEASE_FILTER},
+        "annual_rent",
         ["query-report", "Rent Exposure"],
-        {"currency": currency} if currency else {},
-        fieldtype="Currency",
-        currency=currency,
     )
 
 

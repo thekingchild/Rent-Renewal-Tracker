@@ -83,6 +83,21 @@ NUMBER_CARDS = (
     ("Annual Rent Exposure", "rent_renewal_tracker.dashboard.annual_rent_exposure", "Lease", "#047857"),
 )
 
+COUNT_NUMBER_CARDS = {
+    "Expiring in 30 Days",
+    "Expiring in 60 Days",
+    "Expiring in 90 Days",
+    "Renewals Waiting for Me",
+    "Failed Reminders",
+}
+
+MONETARY_NUMBER_CARDS = {
+    "Overdue Rent Obligations",
+    "Annual Rent Exposure",
+}
+
+FIRST_RUN_BLOCK = "Rent Renewal Tracker First Run"
+
 DASHBOARD_CHARTS = (
     ("Lease Expiry Outlook", "Upcoming Expiries"),
     ("Renewal Workflow", "Renewal Pipeline"),
@@ -90,6 +105,9 @@ DASHBOARD_CHARTS = (
 
 
 def setup_dashboard_defaults():
+    settings = frappe.get_single("Rent Renewal Settings")
+    default_currency = settings.default_currency or frappe.defaults.get_global_default("currency")
+
     for label, method, document_type, color in NUMBER_CARDS:
         name = frappe.db.get_value("Number Card", {"label": label}, "name")
         card = frappe.get_doc("Number Card", name) if name else frappe.new_doc("Number Card")
@@ -105,6 +123,9 @@ def setup_dashboard_defaults():
                 "show_percentage_stats": 0,
                 "show_full_number": 1,
                 "color": color,
+                # Frappe formats a custom Number Card as currency whenever this
+                # field is populated, even when the method returns an Int.
+                "currency": default_currency if label in MONETARY_NUMBER_CARDS else None,
             }
         )
         card.save(ignore_permissions=True)
@@ -128,6 +149,80 @@ def setup_dashboard_defaults():
             }
         )
         chart.save(ignore_permissions=True)
+
+    setup_first_run_block()
+
+
+def setup_first_run_block():
+    if frappe.db.exists("Custom HTML Block", FIRST_RUN_BLOCK):
+        block = frappe.get_doc("Custom HTML Block", FIRST_RUN_BLOCK)
+    else:
+        block = frappe.new_doc("Custom HTML Block")
+        block.__newname = FIRST_RUN_BLOCK
+    block.update(
+        {
+            "private": 0,
+            "html": """
+                <section class="rrt-first-run" hidden aria-labelledby="rrt-first-run-title">
+                    <div>
+                        <h3 id="rrt-first-run-title">Set up Rent Renewal Tracker</h3>
+                        <p>Add your first property and lease to activate the dashboard.</p>
+                    </div>
+                    <div class="rrt-first-run-actions">
+                        <button type="button" class="btn btn-primary btn-sm" data-action="property">
+                            Add Property
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" data-action="lease">
+                            Add Lease
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" data-action="readiness">
+                            View Setup Readiness
+                        </button>
+                    </div>
+                </section>
+            """,
+            "style": """
+                .rrt-first-run {
+                    align-items: center;
+                    background: var(--subtle-accent);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--border-radius-md);
+                    display: flex;
+                    gap: 1rem;
+                    justify-content: space-between;
+                    padding: 1rem 1.25rem;
+                }
+                .rrt-first-run[hidden] { display: none; }
+                .rrt-first-run h3 { font-size: 1rem; margin: 0 0 .25rem; }
+                .rrt-first-run p { color: var(--text-muted); margin: 0; }
+                .rrt-first-run-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+                @media (max-width: 767px) {
+                    .rrt-first-run { align-items: flex-start; flex-direction: column; }
+                }
+            """,
+            "script": """
+                const panel = root_element.querySelector(".rrt-first-run");
+                const property_button = root_element.querySelector('[data-action="property"]');
+                const lease_button = root_element.querySelector('[data-action="lease"]');
+                const readiness_button = root_element.querySelector('[data-action="readiness"]');
+
+                frappe.db.count("Lease").then((lease_count) => {
+                    if (lease_count) return;
+
+                    panel.hidden = false;
+                    property_button.hidden = !frappe.model.can_create("Property");
+                    lease_button.hidden = !frappe.model.can_create("Lease");
+                });
+
+                property_button.addEventListener("click", () => frappe.new_doc("Property"));
+                lease_button.addEventListener("click", () => frappe.new_doc("Lease"));
+                readiness_button.addEventListener("click", () =>
+                    frappe.set_route("query-report", "Setup Readiness")
+                );
+            """,
+        }
+    )
+    block.save(ignore_permissions=True)
 
 
 def setup_renewal_workflow():
