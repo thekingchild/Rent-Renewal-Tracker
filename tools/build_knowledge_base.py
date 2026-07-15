@@ -218,7 +218,7 @@ def add_cover(doc):
     set_run(p.add_run("Frappe Framework v16 application  |  Application version 0.2.0"), size=10, color=MUTED, bold=True)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    set_run(p.add_run("Prepared 13 July 2026"), size=10, color=MUTED)
+    set_run(p.add_run("Prepared 15 July 2026"), size=10, color=MUTED)
     for _ in range(5):
         doc.add_paragraph()
     callout = doc.add_table(rows=1, cols=1)
@@ -234,7 +234,7 @@ def add_front_matter(doc):
     doc.add_heading("How to use this knowledge base", level=1)
     p = doc.add_paragraph()
     add_rich_text(p, "Start with Sections 1-6 for orientation and setup. Operational users should then study leases, documents, payments, and lifecycle requests. Approvers should focus on the workflow and permissions chapters. Administrators and auditors should also study reminders, automation, reporting, security controls, and the field catalogue.")
-    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 13 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
+    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 15 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
     doc.add_heading("Contents at a glance", level=2)
     contents = [
         "Purpose, scope, roles, access, and workspace navigation",
@@ -322,6 +322,8 @@ Administrator, System Manager, Rent Renewal System Manager, and Lease Administra
 ### 22.3 Assigned-user and department access
 
 For scoped users, a lease is visible when the user is the Responsible Officer, Contract Owner, or Backup Officer, or when a Frappe User Permission grants that user the lease's Lease Department. The User Permission must allow Lease Department, match Responsible Department, and either be globally applicable or applicable to Lease. The same rule flows down to Renewal Requests, Rent Schedules, Lease Documents, and Reminder Logs through their Lease link.
+
+When a new Lease is saved, the same scope is evaluated from its proposed values before insertion. Unrestricted operational roles may create without assignment. A Responsible Officer must assign themselves as Responsible Officer, Contract Owner, or Backup Officer, or hold the matching Lease Department User Permission, and the selected classification must be within their clearance. Related records must link to a Lease the user is authorized to access.
 
 ### 22.4 Confidentiality clearance
 
@@ -612,7 +614,7 @@ def main():
     core.subject = "Complete application features, operation, roles, permissions, workflows and field reference"
     core.author = "Rent Renewal Tracker contributors"
     core.keywords = "lease, rent, renewal, Frappe, user manual, knowledge base"
-    core.comments = "Generated from the application source as of 13 July 2026."
+    core.comments = "Generated from the application source as of 15 July 2026."
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUTPUT)
     print(OUTPUT)

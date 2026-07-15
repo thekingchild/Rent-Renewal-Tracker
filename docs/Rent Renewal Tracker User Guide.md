@@ -1,8 +1,8 @@
 # Rent Renewal Tracker User Guide
 
-Version: 1.1
+Version: 1.2
 
-Prepared: 11 July 2026
+Prepared: 15 July 2026
 
 ## 1. Purpose
 
@@ -38,6 +38,8 @@ Access to screens and actions depends on user role. The main roles used by the a
 - `Lease Viewer`: Basic read-only access.
 
 If a menu item is missing, the usual cause is role-based permission rather than a system error.
+
+Role permission makes a DocType available, while record-level authorization determines which specific records the user may open or change. Lease assignment, Lease Department User Permissions, and confidentiality clearance are rechecked when a record is opened or saved.
 
 ## 4. Opening the App
 
@@ -249,6 +251,13 @@ Open `Operations > Leases`.
 1. Click `Add Lease`.
 2. Complete the key sections.
 3. Save the record.
+
+The save operation applies both the role permission and the record-level lease scope:
+
+- `Rent Renewal System Manager` and `Lease Administrator` may create a Lease without being assigned to it because they are unrestricted operational roles.
+- A `Responsible Officer` may create a Lease only when the new record assigns that user as Responsible Officer, Contract Owner, or Backup Officer, or the user has a matching Lease Department User Permission. The selected confidentiality classification must also be within the user's clearance.
+
+Lease Documents, Rent Schedules, Renewal Requests, and Reminder Logs repeat the parent Lease authorization check through their required `Lease` link.
 
 ### 10.2 Lease Identity Section
 
@@ -772,7 +781,7 @@ Helpful fields shown:
 
 ## 18. Troubleshooting Tips
 
-- If a user cannot edit a record, first verify their role and the current workflow state.
+- If a user cannot create or edit a Lease, verify their role, assignment or Lease Department User Permission, confidentiality clearance, and the current workflow or document state.
 - If a renewal cannot be completed, check for the required `Lease Document` category.
 - If a rent schedule will not save, confirm the currency matches the parent lease and the period stays within lease dates.
 - If reminders are not sending, review `Settings`, the chosen `Reminder Policy`, and the `Reminder Delivery` report.
