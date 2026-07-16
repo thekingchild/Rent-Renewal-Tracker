@@ -218,7 +218,7 @@ def add_cover(doc):
     set_run(p.add_run("Frappe Framework v16 application  |  Application version 0.2.0"), size=10, color=MUTED, bold=True)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    set_run(p.add_run("Prepared 15 July 2026"), size=10, color=MUTED)
+    set_run(p.add_run("Prepared 16 July 2026"), size=10, color=MUTED)
     for _ in range(5):
         doc.add_paragraph()
     callout = doc.add_table(rows=1, cols=1)
@@ -234,7 +234,7 @@ def add_front_matter(doc):
     doc.add_heading("How to use this knowledge base", level=1)
     p = doc.add_paragraph()
     add_rich_text(p, "Start with Sections 1-6 for orientation and setup. Operational users should then study leases, documents, payments, and lifecycle requests. Approvers should focus on the workflow and permissions chapters. Administrators and auditors should also study reminders, automation, reporting, security controls, and the field catalogue.")
-    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 15 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
+    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 16 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
     doc.add_heading("Contents at a glance", level=2)
     contents = [
         "Purpose, scope, roles, access, and workspace navigation",
@@ -321,13 +321,13 @@ Administrator, System Manager, Rent Renewal System Manager, and Lease Administra
 
 ### 22.3 Assigned-user and department access
 
-For scoped users, a lease is visible when the user is the Responsible Officer, Contract Owner, or Backup Officer, or when a Frappe User Permission grants that user the lease's Lease Department. The User Permission must allow Lease Department, match Responsible Department, and either be globally applicable or applicable to Lease. The same rule flows down to Renewal Requests, Rent Schedules, Lease Documents, and Reminder Logs through their Lease link.
+For scoped users, a lease is visible when the user is the Responsible Officer, Contract Owner, or Backup Officer, or when a Frappe User Permission grants that user the lease's Lease Department. The User Permission must allow Lease Department, match Responsible Department, and either be globally applicable or applicable to Lease. The same rule flows down to Renewal Requests, Rent Schedules, Lease Documents, and Reminder Logs through their Lease link. Lease Documents add their own confidentiality check after the parent Lease check.
 
 When a new Lease is saved, the same scope is evaluated from its proposed values before insertion. Unrestricted operational roles may create without assignment. A Responsible Officer must assign themselves as Responsible Officer, Contract Owner, or Backup Officer, or hold the matching Lease Department User Permission, and the selected classification must be within their clearance. Related records must link to a Lease the user is authorized to access.
 
 ### 22.4 Confidentiality clearance
 
-Lease Viewer can see Public and Internal leases. Responsible Officer, Department Head, and Finance Approver can see Public, Internal, and Confidential leases. Legal Approver, Management Approver, and Lease Auditor can see Public, Internal, Confidential, and Restricted leases. A user with multiple roles receives the union of those clearances. Restricted document access therefore still depends on both clearance and assignment/department scope unless the user has an unrestricted role.
+Lease Viewer can see Public and Internal leases. Responsible Officer, Department Head, and Finance Approver can see Public, Internal, and Confidential leases. Legal Approver, Management Approver, and Lease Auditor can see Public, Internal, Confidential, and Restricted leases. A user with multiple roles receives the union of those clearances. Lease Document access must pass this parent clearance and the document's Internal, Confidential, or Restricted classification; a user may see the Lease while a stricter linked document and private file remain hidden.
 
 ### 22.5 Workflow authorization and segregation of duties
 
@@ -335,7 +335,7 @@ An approver must have the role permitted for the current workflow transition and
 
 ### 22.6 Private files and audit integrity
 
-Lease Documents accept only private files. The user must be able to read the File and either own an unattached upload, own a file attached to the lease/document, use a temporary upload, or have read access to the original attached record. Existing document files cannot be replaced; a new revision must be created. Reminder Logs cannot be edited manually and cannot be deleted except during uninstall.
+Lease Documents accept only private files. The user must be able to read the File and either own an unattached upload, own a file attached to the lease/document, use a temporary upload, or have read access to the original attached record. Once attached, Frappe delegates File reads and downloads to the Lease Document permission decision. Existing document files cannot be replaced; a new revision requires create permission on Lease Document and write permission on the current revision. Reminder Logs cannot be edited manually and cannot be deleted except during uninstall.
 
 ## 23. Lifecycle Actions: Renewal and Termination
 
@@ -349,7 +349,7 @@ Termination uses the same approval chain. Outside Draft, Termination Effective D
 
 ### 23.3 Renewal-specific execution
 
-For Renew, Renegotiate, or Relocate, the approved request requires proposed property, start date, end date, currency, rent basis, and payment frequency before leaving Draft. Before execution, attach a current private Renewal Letter with Document Date and link it to the request. Mark Executed creates one successor lease, links predecessor and successor, copies ownership, contacts, landlord, classification, and selected financial structure, and applies approved proposed terms. A database uniqueness rule prevents more than one successor for the same predecessor.
+For Renew, Renegotiate, or Relocate, the approved request requires proposed property, start date, end date, currency, rent basis, and payment frequency before leaving Draft. Before execution, attach a current private Renewal Letter with Document Date and link it to the request. Mark Executed creates one successor lease, links predecessor and successor, copies ownership, contacts, landlord, classification, and selected financial structure, and applies approved proposed terms. Application validation permits one non-cancelled successor while retaining cancelled and amended revision history.
 
 ### 23.4 Cancellation and rejection
 
@@ -367,7 +367,7 @@ No Expiry Date is used when Expiry Date is blank. Current means the document is 
 
 ### 24.3 Creating a revision
 
-Open the current Lease Document and select Create Revision. The new record inherits lease, lifecycle request, title, category, dates, and confidentiality. Upload a different private file and enter Revision Reason. The new record stays in the same Document Family ID with the next Revision number; Revised By and Revised On are recorded automatically. Saving the new revision marks the previous record and document status Superseded. Revisions must remain on the same lease and must branch only from the current revision.
+Open the current Lease Document and select Create Revision. The action is shown only when the user can create Lease Documents and write the current revision. The new record inherits lease, lifecycle request, title, category, dates, and confidentiality. Upload a different private file and enter Revision Reason. Frappe assigns the new record name before Document Family ID and Revision number are calculated. Saving uses normal permission, validation, and change-tracking hooks to mark the previous revision Superseded and clear its expiry-attention value. Revisions must remain on the same lease and must branch only from the current revision; direct API calls receive the same checks.
 
 ## 25. Payment Evidence and Schedule Integrity
 
@@ -614,7 +614,7 @@ def main():
     core.subject = "Complete application features, operation, roles, permissions, workflows and field reference"
     core.author = "Rent Renewal Tracker contributors"
     core.keywords = "lease, rent, renewal, Frappe, user manual, knowledge base"
-    core.comments = "Generated from the application source as of 15 July 2026."
+    core.comments = "Generated from the application source as of 16 July 2026."
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUTPUT)
     print(OUTPUT)

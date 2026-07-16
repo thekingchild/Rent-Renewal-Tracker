@@ -12,6 +12,7 @@ from rent_renewal_tracker.install import (
     NUMBER_CARDS,
     WORKFLOW_ACTIONS,
     WORKFLOW_STATES,
+    set_missing_required_settings,
 )
 
 
@@ -60,6 +61,20 @@ class TestInstallationDefaults(IntegrationTestCase):
             {90, 60, 30, 14, 7, 0},
         )
         self.assertEqual(policy.overdue_cadence_days, 7)
+
+    def test_required_settings_defaults_exist(self):
+        settings = frappe.get_single("Rent Renewal Settings")
+
+        self.assertEqual(settings.expiring_soon_threshold, 90)
+        self.assertEqual(settings.document_expiring_soon_threshold, 30)
+        self.assertIsNotNone(settings.reminder_retry_limit)
+
+    def test_required_settings_defaults_preserve_valid_zero(self):
+        settings = frappe.get_single("Rent Renewal Settings")
+        settings.reminder_retry_limit = 0
+
+        set_missing_required_settings(settings)
+        self.assertEqual(settings.reminder_retry_limit, 0)
 
     def test_apps_screen_entry_is_not_available_to_guests(self):
         frappe.set_user("Guest")

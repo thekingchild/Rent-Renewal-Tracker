@@ -39,7 +39,7 @@ permission_query_conditions = {
 }
 has_permission = {
     "Lease": "rent_renewal_tracker.permissions.lease_has_permission",
-    "Lease Document": "rent_renewal_tracker.permissions.dependent_has_permission",
+    "Lease Document": "rent_renewal_tracker.permissions.lease_document_has_permission",
     "Rent Schedule": "rent_renewal_tracker.permissions.dependent_has_permission",
     "Renewal Request": "rent_renewal_tracker.permissions.dependent_has_permission",
     "Reminder Log": "rent_renewal_tracker.permissions.dependent_has_permission",

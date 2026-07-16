@@ -348,6 +348,20 @@ def setup_renewal_workflow():
     workflow.save(ignore_permissions=True)
 
 
+REQUIRED_SETTINGS_DEFAULTS = {
+    "expiring_soon_threshold": 90,
+    "document_expiring_soon_threshold": 30,
+    "reminder_retry_limit": 2,
+}
+
+
+def set_missing_required_settings(settings):
+    """Apply required defaults without overwriting valid administrator values."""
+    for fieldname, default in REQUIRED_SETTINGS_DEFAULTS.items():
+        if settings.get(fieldname) in (None, ""):
+            settings.set(fieldname, default)
+
+
 def setup_reminder_defaults():
     policy_name = "Default Lease Expiry Policy"
     if not frappe.db.exists("Reminder Policy", policy_name):
@@ -398,6 +412,5 @@ def setup_reminder_defaults():
 
     settings = frappe.get_single("Rent Renewal Settings")
     settings.default_reminder_policy = policy_name
-    settings.expiring_soon_threshold = settings.expiring_soon_threshold or 90
-    settings.reminder_retry_limit = settings.reminder_retry_limit or 2
+    set_missing_required_settings(settings)
     settings.save(ignore_permissions=True)

@@ -1,6 +1,19 @@
 frappe.ui.form.on("Lease Document", {
+	setup(frm) {
+		frm.set_query("previous_revision", () => ({
+			filters: {
+				lease: frm.doc.lease,
+				revision_status: "Current",
+			},
+		}));
+	},
 	refresh(frm) {
-		if (!frm.is_new() && frm.doc.revision_status === "Current") {
+		const can_create_revision =
+			!frm.is_new() &&
+			frm.doc.revision_status === "Current" &&
+			frm.has_perm("write") &&
+			frappe.model.can_create("Lease Document");
+		if (can_create_revision) {
 			frm.add_custom_button(__("Create Revision"), () => {
 				frappe.new_doc("Lease Document", {
 					lease: frm.doc.lease,

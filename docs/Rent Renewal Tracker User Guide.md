@@ -1,8 +1,8 @@
 # Rent Renewal Tracker User Guide
 
-Version: 1.2
+Version: 1.3
 
-Prepared: 15 July 2026
+Prepared: 16 July 2026
 
 ## 1. Purpose
 
@@ -257,7 +257,7 @@ The save operation applies both the role permission and the record-level lease s
 - `Rent Renewal System Manager` and `Lease Administrator` may create a Lease without being assigned to it because they are unrestricted operational roles.
 - A `Responsible Officer` may create a Lease only when the new record assigns that user as Responsible Officer, Contract Owner, or Backup Officer, or the user has a matching Lease Department User Permission. The selected confidentiality classification must also be within the user's clearance.
 
-Lease Documents, Rent Schedules, Renewal Requests, and Reminder Logs repeat the parent Lease authorization check through their required `Lease` link.
+Lease Documents, Rent Schedules, Renewal Requests, and Reminder Logs repeat the parent Lease authorization check through their required `Lease` link. Lease Documents additionally enforce their own `Confidentiality` field, so access must pass both the parent Lease classification and the linked document classification.
 
 ### 10.2 Lease Identity Section
 
@@ -409,19 +409,26 @@ Important fields:
 
 The Lease Document `Confidentiality` field labels the sensitivity of that specific file as `Internal`, `Confidential`, or `Restricted`. It is useful for records management, review, and handling instructions. It is separate from the parent Lease field named `Confidentiality Classification`, which supports `Public`, `Internal`, `Confidential`, and `Restricted`.
 
-In the current application, the document-level label does **not** independently grant or deny access. Actual access to a Lease Document is inherited from its parent Lease. A user must have Lease Document read permission and must also be authorized for the linked lease through assignment or department scope and the parent lease's confidentiality clearance. Therefore, marking a document `Restricted` while its parent lease remains `Internal` does not create an additional technical access barrier by itself.
+Lease Document access is the intersection of the user's DocType role permission, linked Lease assignment or department scope, parent Lease confidentiality clearance, and the document's own confidentiality clearance. A user can open the Lease but still be denied a more restricted Lease Document. The same decision protects the private File attached to that document.
 
-For enforceable restriction, set the parent Lease `Confidentiality Classification` to the appropriate level and review the assigned users and Lease Department User Permissions. As a data-governance practice, the document label should normally be at least as restrictive as the file's content, and the parent lease should be classified at the highest sensitivity required by any document that must not be visible to the wider lease audience.
+The effective boundary is the stricter combination of parent and child controls. Users cannot create a Lease Document above their own clearance, and changing assignments or Lease Department User Permissions on the parent Lease immediately affects access to its linked documents. Classify the parent lease for the overall relationship and classify each document for the sensitivity of that specific evidence.
 
 Role effects are:
 
 - `Rent Renewal System Manager` and `Lease Administrator` can read, create, edit, delete, print, email, and export Lease Document records, subject to the private-file controls. These roles are unrestricted by the lease assignment and confidentiality filter.
-- `Responsible Officer` can read, create, edit, and print documents for leases they are authorized to access, but cannot delete, email, or export them through the configured DocType permissions.
-- `Department Head`, `Finance Approver`, `Legal Approver`, and `Management Approver` have read-and-print access only when the parent lease is within their assignment or department scope and clearance.
-- `Lease Auditor` has read, print, and export access to authorized documents and has clearance for all parent-lease classifications, including Restricted; assignment or department scope still applies.
-- `Lease Viewer` has read-and-print access only to authorized documents whose parent lease is Public or Internal.
+- `Responsible Officer` can read, create, edit, and print documents for authorized leases when both the parent and document are within the role's Public, Internal, or Confidential clearance. The role cannot delete, email, or export through the configured DocType permissions.
+- `Department Head` and `Finance Approver` have read-and-print access to authorized documents through Confidential. They cannot create revisions because they lack Lease Document create and write permission.
+- `Legal Approver` and `Management Approver` have read-and-print clearance through Restricted, while assignment or Lease Department scope still applies.
+- `Lease Auditor` has read, print, and export clearance through Restricted; assignment or department scope still applies.
+- `Lease Viewer` has read-and-print access only to authorized Internal documents on parent leases within the role's Public or Internal clearance.
 
-Every attached file must also be private. The application checks the user's permission to use the File record, its owner or original attachment, the allowed file extension, and the site's maximum file size. These file controls work in addition to the role and parent-lease access rules.
+Every attached file must also be private. The application checks the user's permission to use the File record, its owner or original attachment, the allowed file extension, and the site's maximum file size. After attachment, Frappe resolves private-file access through the Lease Document, so the linked Lease scope and document confidentiality rule also govern file reads and downloads.
+
+### 11.2 Creating and Controlling Revisions
+
+The `Create Revision` action appears only for a current revision when the user can create Lease Documents and can write the current record. The new record receives its name before the application assigns Document Family ID, Revision number, Revised By, and Revised On through Frappe's validation lifecycle. A revision must use a different private file, remain on the same Lease, include a Revision Reason, and branch from the current revision. Saving it updates the previous revision through the normal Frappe save lifecycle, including permission checks and change tracking, and marks the previous revision `Superseded`.
+
+Document classifications and revision permissions are enforced on direct API requests as well as the Desk form; hiding the button is only a usability aid.
 
 Document categories include:
 
