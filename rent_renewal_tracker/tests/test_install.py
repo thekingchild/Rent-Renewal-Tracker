@@ -16,6 +16,18 @@ from rent_renewal_tracker.install import (
 
 
 class TestInstallationDefaults(IntegrationTestCase):
+    def test_submittable_doctypes_are_amendable(self):
+        for doctype in ("Lease", "Renewal Request", "Rent Schedule"):
+            field = frappe.get_meta(doctype).get_field("amended_from")
+
+            self.assertIsNotNone(field, doctype)
+            self.assertEqual(field.fieldtype, "Link")
+            self.assertEqual(field.options, doctype)
+            self.assertTrue(field.read_only)
+            self.assertTrue(field.print_hide)
+            self.assertTrue(field.no_copy)
+            self.assertTrue(field.search_index)
+
     def test_application_roles_exist(self):
         for role in APP_ROLES:
             self.assertTrue(frappe.db.exists("Role", role), role)

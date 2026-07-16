@@ -12,6 +12,8 @@ LIFECYCLE_ELIGIBLE_STATUSES = {"Active", "Expiring Soon", "Expired"}
 class Lease(Document):
     def before_insert(self):
         self.lease_id = self.name
+        if self.amended_from:
+            self.migration_source_id = None
 
     def after_insert(self):
         # Frappe assigns series names after before_insert on current releases.
@@ -31,8 +33,29 @@ class Lease(Document):
         self.set_property_region()
         self.validate_dates()
         self.validate_amounts()
+        self.validate_current_successor()
         self.calculate_derived_values()
         self.validate_active_requirements()
+
+    def validate_current_successor(self):
+        if not self.predecessor_lease:
+            return
+
+        existing = frappe.db.get_value(
+            "Lease",
+            {
+                "name": ["!=", self.name or ""],
+                "predecessor_lease": self.predecessor_lease,
+                "docstatus": ["<", 2],
+            },
+            "name",
+        )
+        if existing:
+            frappe.throw(
+                _("Lease {0} already has current successor {1}.").format(
+                    self.predecessor_lease, existing
+                )
+            )
 
     def set_property_region(self):
         if self.property:

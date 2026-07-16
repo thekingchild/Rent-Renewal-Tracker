@@ -85,3 +85,19 @@ class TestRentSchedule(IntegrationTestCase):
         schedule = self.make_schedule(period_to=add_days(self.lease.end_date, 1))
 
         self.assertRaises(frappe.ValidationError, schedule.insert)
+
+    def test_cancelled_schedule_can_be_amended_and_resubmitted(self):
+        schedule = self.make_schedule().insert()
+        schedule.submit()
+        schedule.cancel()
+
+        amendment = frappe.copy_doc(schedule)
+        amendment.docstatus = 0
+        amendment.amended_from = schedule.name
+        amendment.insert()
+        amendment.submit()
+
+        self.assertEqual(amendment.amended_from, schedule.name)
+        self.assertEqual(amendment.name, f"{schedule.name}-1")
+        self.assertEqual(amendment.docstatus, 1)
+        self.assertEqual(amendment.schedule_status, "Due")

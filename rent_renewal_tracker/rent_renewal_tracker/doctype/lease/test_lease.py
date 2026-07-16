@@ -95,3 +95,57 @@ class TestLease(IntegrationTestCase):
 
         self.assertEqual(lease.docstatus, 1)
         self.assertIn(lease.lease_status, {"Active", "Expiring Soon"})
+
+    def test_cancelled_lease_can_be_amended_and_resubmitted(self):
+        migration_source_id = f"MIG-{frappe.generate_hash(length=10)}"
+        lease = self.make_lease(
+            lease_status="Draft", migration_source_id=migration_source_id
+        ).insert()
+        lease.submit()
+        lease.cancel()
+
+        amendment = frappe.copy_doc(lease)
+        amendment.docstatus = 0
+        amendment.amended_from = lease.name
+        amendment.insert()
+        amendment.submit()
+
+        self.assertEqual(amendment.amended_from, lease.name)
+        self.assertEqual(amendment.name, f"{lease.name}-1")
+        self.assertEqual(amendment.docstatus, 1)
+        self.assertEqual(amendment.lease_id, amendment.name)
+        self.assertIsNone(amendment.migration_source_id)
+        self.assertEqual(lease.migration_source_id, migration_source_id)
+
+    def test_cancelled_successor_lease_can_be_amended(self):
+        predecessor = self.make_lease(lease_title="Predecessor Lease").insert()
+        successor = self.make_lease(
+            lease_title="Successor Lease",
+            lease_status="Draft",
+            predecessor_lease=predecessor.name,
+        ).insert()
+        successor.submit()
+        successor.cancel()
+
+        amendment = frappe.copy_doc(successor)
+        amendment.docstatus = 0
+        amendment.amended_from = successor.name
+        amendment.insert()
+
+        self.assertEqual(amendment.predecessor_lease, predecessor.name)
+        self.assertEqual(amendment.amended_from, successor.name)
+
+    def test_predecessor_has_only_one_current_successor(self):
+        predecessor = self.make_lease(lease_title="Unique Predecessor").insert()
+        first = self.make_lease(
+            lease_title="First Successor",
+            predecessor_lease=predecessor.name,
+        ).insert()
+
+        with self.assertRaises(frappe.ValidationError):
+            self.make_lease(
+                lease_title="Second Successor",
+                predecessor_lease=predecessor.name,
+            ).insert()
+
+        self.assertTrue(frappe.db.exists("Lease", first.name))

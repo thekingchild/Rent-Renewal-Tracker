@@ -4,7 +4,7 @@
  "creation": "2026-07-10 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["identity_section", "lease_id", "lease_title", "property", "region", "landlord", "lease_type", "external_reference", "predecessor_lease", "ownership_section", "responsible_department", "responsible_officer", "contract_owner", "backup_officer", "reminder_policy", "lease_contacts", "term_section", "start_date", "end_date", "notice_period_days", "notice_deadline", "term_column", "renewal_option", "renewal_option_deadline", "break_clause_date", "auto_renew", "days_to_expiry", "next_action_date", "financial_section", "currency", "rent_basis", "monthly_rent", "annual_rent", "payment_frequency", "financial_column", "security_deposit", "annual_service_charge", "annual_tax", "total_annual_occupancy_cost", "escalation_rule", "status_section", "lease_status", "renewal_status", "renewal_completed", "last_reminder_date", "next_reminder_date", "last_renewal_request", "control_section", "confidentiality_classification", "migration_source_id", "comments"],
+ "field_order": ["identity_section", "lease_id", "lease_title", "property", "region", "landlord", "lease_type", "external_reference", "predecessor_lease", "ownership_section", "responsible_department", "responsible_officer", "contract_owner", "backup_officer", "reminder_policy", "lease_contacts", "term_section", "start_date", "end_date", "notice_period_days", "notice_deadline", "term_column", "renewal_option", "renewal_option_deadline", "break_clause_date", "auto_renew", "days_to_expiry", "next_action_date", "financial_section", "currency", "rent_basis", "monthly_rent", "annual_rent", "payment_frequency", "financial_column", "security_deposit", "annual_service_charge", "annual_tax", "total_annual_occupancy_cost", "escalation_rule", "status_section", "lease_status", "renewal_status", "renewal_completed", "last_reminder_date", "next_reminder_date", "last_renewal_request", "control_section", "confidentiality_classification", "migration_source_id", "comments", "amended_from"],
  "fields": [
   {"fieldname": "identity_section", "fieldtype": "Section Break", "label": "Lease Identity"},
   {"fieldname": "lease_id", "fieldtype": "Data", "in_list_view": 1, "in_standard_filter": 1, "label": "Lease ID", "read_only": 1, "unique": 1, "description": "System-generated document identifier, such as LEASE-2026-00001."},
@@ -14,7 +14,7 @@
   {"fieldname": "landlord", "fieldtype": "Link", "in_standard_filter": 1, "label": "Landlord", "options": "Landlord", "reqd": 1, "description": "The counterparty or owner associated with the lease."},
   {"fieldname": "lease_type", "fieldtype": "Select", "label": "Lease Type", "options": "Commercial\nResidential\nLand\nEquipment\nOther", "reqd": 1, "description": "Classifies the asset or occupancy type covered by the agreement."},
   {"fieldname": "external_reference", "fieldtype": "Data", "label": "External / Contract Reference", "description": "Optional external contract, system, or vendor reference."},
-  {"fieldname": "predecessor_lease", "fieldtype": "Link", "label": "Predecessor Lease", "options": "Lease", "read_only": 1, "unique": 1, "description": "The previous lease record that this lease succeeds."},
+  {"fieldname": "predecessor_lease", "fieldtype": "Link", "label": "Predecessor Lease", "options": "Lease", "read_only": 1, "search_index": 1, "description": "The previous lease record that this lease succeeds."},
   {"fieldname": "ownership_section", "fieldtype": "Section Break", "label": "Ownership"},
   {"fieldname": "responsible_department", "fieldtype": "Link", "in_standard_filter": 1, "label": "Responsible Department", "options": "Lease Department", "reqd": 1, "description": "Business team accountable for lease administration and renewals."},
   {"fieldname": "responsible_officer", "fieldtype": "Link", "label": "Responsible Officer", "options": "User", "reqd": 1, "description": "Primary user responsible for day-to-day lease tracking."},
@@ -56,7 +56,8 @@
   {"fieldname": "control_section", "fieldtype": "Section Break", "label": "Control and Migration"},
   {"default": "Internal", "fieldname": "confidentiality_classification", "fieldtype": "Select", "label": "Confidentiality Classification", "options": "Public\nInternal\nConfidential\nRestricted", "reqd": 1, "description": "Controls how sensitive the lease record is treated internally."},
   {"fieldname": "migration_source_id", "fieldtype": "Data", "label": "Migration Source ID", "unique": 1, "description": "Legacy system identifier used during imports and migrations."},
-  {"fieldname": "comments", "fieldtype": "Text Editor", "label": "Comments", "description": "Free-form notes, exceptions, or context that do not fit other fields."}
+  {"fieldname": "comments", "fieldtype": "Text Editor", "label": "Comments", "description": "Free-form notes, exceptions, or context that do not fit other fields."},
+  {"fieldname": "amended_from", "fieldtype": "Link", "label": "Amended From", "no_copy": 1, "options": "Lease", "print_hide": 1, "read_only": 1, "search_index": 1}
  ],
  "index_web_pages_for_search": 0,
  "is_submittable": 1,
