@@ -22,7 +22,7 @@ from rent_renewal_tracker.patches.v0_7.normalize_dashboard_number_card_currency 
 
 class TestInstallationDefaults(IntegrationTestCase):
     def test_submittable_doctypes_are_amendable(self):
-        for doctype in ("Lease", "Renewal Request", "Rent Schedule"):
+        for doctype in ("Lease", "Renewal Request", "Rent Schedule", "Lease Document"):
             field = frappe.get_meta(doctype).get_field("amended_from")
 
             self.assertIsNotNone(field, doctype)

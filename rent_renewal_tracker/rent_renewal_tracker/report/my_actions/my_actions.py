@@ -163,7 +163,10 @@ def get_failed_reminder_actions():
 def get_document_expiry_actions():
     rows = frappe.get_list(
         "Lease Document",
-        filters={"document_status": ["in", ["Expiring Soon", "Expired"]]},
+        filters={
+            "document_status": ["in", ["Expiring Soon", "Expired"]],
+            "docstatus": ["<", 2],
+        },
         fields=["name", "lease", "title", "expiry_date", "document_status"],
         order_by="expiry_date asc",
         limit_page_length=0,

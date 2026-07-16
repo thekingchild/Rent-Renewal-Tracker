@@ -1,6 +1,6 @@
 # Rent Renewal Tracker User Guide
 
-Version: 1.4
+Version: 1.5
 
 Prepared: 16 July 2026
 
@@ -387,90 +387,107 @@ The system prevents:
 
 ## 11. Lease Documents
 
-Open `Operations > Lease Documents`.
+Open `Operations > Lease Documents` to store private contractual evidence against a saved Lease. Lease Document now follows Frappe's standard Draft, Submit, Cancel, and Amend lifecycle.
 
-Use this screen to store supporting files in private storage.
+Important fields include `Lease`, `Lifecycle Request`, `Title`, `Category`, `Private File`, document dates, expiry information, `Confidentiality`, revision fields, `Cancellation Reason`, and `Amended From`.
 
-Important fields:
+### 11.1 Layered Access and Linked-Lease Permission
 
-- `Lease`
-- `Title`
-- `Category`
-- `Private File`
-- `Document Date`
-- `Effective Date`
-- `Expiry Date`
-- `Version Label`
-- `Confidentiality`
-- `Uploaded By`
-- `Notes`
+Lease Document access is never determined by its role permission alone. Every read, create, write, submit, cancel, revision, and file-download decision is the intersection of:
 
-### 11.1 What Document Confidentiality Means
+- The user's Lease Document DocType permission for the requested action.
+- Access to the linked saved Lease.
+- Assignment through the Lease's `Responsible Officer`, `Contract Owner`, or `Backup Officer`, or a matching Lease Department User Permission.
+- The parent Lease's `Confidentiality Classification` clearance.
+- The Lease Document's own `Confidentiality` clearance.
+- Permission to use and read the private File record.
 
-The Lease Document `Confidentiality` field labels the sensitivity of that specific file as `Internal`, `Confidential`, or `Restricted`. It is useful for records management, review, and handling instructions. It is separate from the parent Lease field named `Confidentiality Classification`, which supports `Public`, `Internal`, `Confidential`, and `Restricted`.
+A Lease Department User Permission must use `Allow = Lease Department`, a `For Value` matching the Lease's `Responsible Department`, and `Applicable For = Lease` or blank. Being mentioned as a contact or approver does not grant create, write, submit, or cancel permission by itself.
 
-Lease Document access is the intersection of the user's DocType role permission, linked Lease assignment or department scope, parent Lease confidentiality clearance, and the document's own confidentiality clearance. A user can open the Lease but still be denied a more restricted Lease Document. The same decision protects the private File attached to that document.
+`Rent Renewal System Manager` and `Lease Administrator` are unrestricted operational roles for the linked-Lease scope. `Administrator` retains Frappe's permission bypass. `System Manager` bypasses the record-level scope filter but still needs an applicable Lease Document DocType grant for the requested action.
 
-The effective boundary is the stricter combination of parent and child controls. Users cannot create a Lease Document above their own clearance, and changing assignments or Lease Department User Permissions on the parent Lease immediately affects access to its linked documents. Classify the parent lease for the overall relationship and classify each document for the sensitivity of that specific evidence.
+### 11.2 Confidentiality Clearance
 
-Role effects are:
+The parent Lease and child document classifications are checked separately, and the stricter result wins:
 
-- `Rent Renewal System Manager` and `Lease Administrator` can read, create, edit, delete, print, email, and export Lease Document records, subject to the private-file controls. These roles are unrestricted by the lease assignment and confidentiality filter.
-- `Responsible Officer` can read, create, edit, and print documents for authorized leases when both the parent and document are within the role's Public, Internal, or Confidential clearance. The role cannot delete, email, or export through the configured DocType permissions.
-- `Department Head` and `Finance Approver` have read-and-print access to authorized documents through Confidential. They cannot create revisions because they lack Lease Document create and write permission.
-- `Legal Approver` and `Management Approver` have read-and-print clearance through Restricted, while assignment or Lease Department scope still applies.
-- `Lease Auditor` has read, print, and export clearance through Restricted; assignment or department scope still applies.
-- `Lease Viewer` has read-and-print access only to authorized Internal documents on parent leases within the role's Public or Internal clearance.
+- `Responsible Officer`, `Department Head`, and `Finance Approver` have clearance through Confidential.
+- `Legal Approver`, `Management Approver`, and `Lease Auditor` have clearance through Restricted.
+- `Lease Viewer` is limited to Public/Internal parent leases and Internal Lease Documents.
+- Multiple roles combine their DocType grants and confidentiality clearances, but assignment or department scope still applies to scoped users.
 
-### 11.2 Who Can Create a Lease Document?
+For example, a user with `Responsible Officer` plus `Legal Approver` receives create/submit authority from Responsible Officer and Restricted clearance from Legal Approver, but can act only on an assigned Lease or one covered by the matching Lease Department User Permission.
 
-Under the application's default DocType permissions:
+### 11.3 Who Can Create and Save a Draft?
 
-- `Administrator` can create a Lease Document linked to any existing Lease because Frappe grants Administrator a permission bypass.
-- `Rent Renewal System Manager` and `Lease Administrator` can create a Lease Document linked to any existing Lease. These roles bypass Lease assignment, department scope, and confidentiality filters.
-- `Responsible Officer` can create a Lease Document only when the linked Lease is within the user's assignment or Lease Department scope and both the parent Lease and the document are within the user's confidentiality clearance.
-- `System Manager` by itself cannot create a Lease Document. The role bypasses the application's record-level Lease filters, but it does not have Lease Document create permission in the default DocType permission matrix. The user must also hold `Rent Renewal System Manager`, `Lease Administrator`, `Responsible Officer`, or an explicitly configured custom create permission.
-- `Department Head`, `Finance Approver`, `Legal Approver`, `Management Approver`, `Lease Auditor`, and `Lease Viewer` cannot create Lease Documents with only those roles. Their default Lease Document access is read-oriented.
+Under the default permission matrix:
 
-The `Lease` field is mandatory and must link to a saved Lease. Being named as Responsible Officer, Contract Owner, Backup Officer, a Lease contact, or an approver does not by itself grant Lease Document creation. The user must first have a role that grants Lease Document create permission.
+- `Administrator`, `Rent Renewal System Manager`, and `Lease Administrator` can create Lease Documents for any accessible saved Lease.
+- `Responsible Officer` can create a document only for a Lease within the user's assignment or department scope and confidentiality clearance.
+- `Department Head`, `Finance Approver`, `Legal Approver`, `Management Approver`, `Lease Auditor`, and `Lease Viewer` are read-oriented and cannot create with only those roles.
+- A custom role can create only when it has explicit Lease Document `Create` permission and the user also passes linked-Lease scope and confidentiality checks.
 
-### 11.3 Exact Linked-Lease Requirements for a Responsible Officer
+A newly saved record remains `Draft`; saving alone does not make it contractual evidence and does not supersede an earlier revision. While it is a true Draft, its file and metadata may be corrected. Only users whose role includes `Delete` can delete it; by default that is the two operational manager roles. Responsible Officer can create and edit Drafts but cannot delete them.
 
-A user relying on the `Responsible Officer` role must satisfy at least one of these scope conditions on the selected Lease:
+### 11.4 Who Can Submit, and What Does Submission Do?
 
-- The user's account is entered in `Responsible Officer`.
-- The user's account is entered in `Contract Owner`.
-- The user's account is entered in `Backup Officer`.
-- The user has a Frappe User Permission with `Allow` set to `Lease Department`, `For Value` matching the Lease's `Responsible Department`, and `Applicable For` set to `Lease` or left blank.
+Default submit authority is:
 
-Scope alone is not sufficient. A user with only the `Responsible Officer` role has clearance for Public, Internal, and Confidential parent Leases and for Internal and Confidential Lease Documents. That role cannot create a Restricted Lease Document or create against a Restricted Lease.
+- `Administrator`: may submit through Frappe's permission bypass.
+- `Rent Renewal System Manager`: may submit.
+- `Lease Administrator`: may submit.
+- `Responsible Officer`: may submit only when the linked Lease and document are within the user's scope and clearance.
+- All review-only, audit, and viewer roles: no submit permission by default.
 
-Frappe combines permissions from all roles assigned to a user. For example, a user who has both `Responsible Officer` and `Legal Approver`, `Management Approver`, or `Lease Auditor` receives Lease Document create permission from `Responsible Officer` and Restricted clearance from the additional role. The user can then create a Restricted Lease Document for a Restricted Lease only when the assignment or Lease Department scope condition is also satisfied.
+A user with a custom role may submit only if that role has explicit Lease Document `Submit` permission and the user also passes linked-Lease and confidentiality authorization.
 
-Every attached file must also be private. The application checks the user's permission to use the File record, its owner or original attachment, the allowed file extension, and the site's maximum file size. After attachment, Frappe resolves private-file access through the Lease Document, so the linked Lease scope and document confidentiality rule also govern file reads and downloads.
+Before submission, the file must be private and permitted, the linked Lifecycle Request (if supplied) must belong to the same Lease, and formal evidence categories (`Signed Agreement`, `Addendum`, `Renewal Letter`, `Approval`, `Payment Receipt`, and `Valuation`) must have a `Document Date`.
 
-### 11.4 Creating and Controlling Revisions
+Submission changes the revision from `Draft` to `Current`, records `Revised By` and `Revised On`, calculates the expiry status, and locks the evidence file against in-place replacement. When submitting a new revision, only then is the previous current revision changed to `Superseded`. This prevents an unfinished Draft from displacing valid evidence.
 
-The `Create Revision` action appears only for a current revision when the user can create Lease Documents and can write the current record. The new record receives its name before the application assigns Document Family ID, Revision number, Revised By, and Revised On through Frappe's validation lifecycle. A revision must use a different private file, remain on the same Lease, include a Revision Reason, and branch from the current revision. Saving it updates the previous revision through the normal Frappe save lifecycle, including permission checks and change tracking, and marks the previous revision `Superseded`.
+### 11.5 Creating a Normal Revision
 
-Document classifications and revision permissions are enforced on direct API requests as well as the Desk form; hiding the button is only a usability aid.
+Open a submitted Current document and select `Create Revision`. The action is also available from a legacy current record for migration compatibility. It requires Lease Document create permission and write access to the current record.
 
-Document categories include:
+The new revision must:
 
-- `Signed Agreement`
-- `Addendum`
-- `Renewal Letter`
-- `Approval`
-- `Payment Receipt`
-- `Valuation`
-- `Correspondence`
-- `Other`
+- Remain linked to the same Lease.
+- Use a different private file.
+- Include a `Revision Reason`.
+- Branch from the current submitted or legacy-current revision.
 
-Important rule:
+The new record remains Draft until an authorized user submits it. Its family ID is retained and its revision number increases. On submission, the new revision becomes Current and the prior revision becomes Superseded. A Superseded revision cannot be used as a branch and cannot be cancelled.
 
-- A completed renewal requires a private supporting document before the workflow can be finalized.
-- If the recommendation is not `Terminate`, the required category is `Renewal Letter`.
-- If the recommendation is `Terminate`, the required category is `Approval`.
+### 11.6 Who Can Cancel, and What Does Cancellation Do?
+
+Default cancellation authority is deliberately narrower than submit authority:
+
+- `Administrator`, `Rent Renewal System Manager`, and `Lease Administrator` can cancel.
+- `Responsible Officer` can submit but cannot cancel; cancellation must be escalated to an operational manager.
+- Review-only, audit, and viewer roles cannot cancel.
+- A custom role needs explicit Lease Document `Cancel` permission and must still pass linked-Lease and confidentiality authorization.
+
+Only the submitted Current revision can be cancelled. Enter and save a meaningful `Cancellation Reason` before selecting Cancel. The cancelled record remains retained as evidence with DocStatus `Cancelled`, Revision Status `Cancelled`, and Document Status `Cancelled`; it is not deleted. If it replaced an earlier revision, the application restores that immediate Superseded predecessor to Current, provided no conflicting current revision exists.
+
+### 11.7 Amending a Cancelled Lease Document
+
+After cancellation, use Frappe's standard `Amend` action. Frappe creates a new Draft and automatically sets `Amended From` to the cancelled record, resolving the earlier amendment error.
+
+An amendment must remain on the same Lease and include a `Revision Reason`. It stays in the same document family and receives the next revision number. An amendment may reuse the cancelled file when the correction concerns metadata; a normal revision must use a different file. The amendment becomes effective only after an authorized user submits it. If the cancelled document had replaced an earlier revision, submission of the amendment supersedes the predecessor that cancellation restored.
+
+### 11.8 Evidence Integrity, Expiry Automation, and Legacy Records
+
+Submitted, Cancelled, Superseded, and legacy records cannot be deleted or have their file replaced in place. Use revision or amendment instead. Daily expiry automation and the My Actions report ignore Draft and Cancelled records; submitted Current documents continue to receive `No Expiry Date`, `Current`, `Expiring Soon`, or `Expired` attention states.
+
+During upgrade, existing Current or Superseded records are marked internally as `Legacy Unsubmitted` rather than being silently submitted. They remain readable, revisable, and valid for existing renewal-completion evidence. An authorized user may review and submit a legacy record later; submission preserves its Current or Superseded revision state and removes the legacy marker. The migration also aligns app-managed Custom DocPerm rows so existing sites receive the same submit/cancel grants as new installations without replacing unrelated custom permissions.
+
+### 11.9 Renewal and Termination Evidence
+
+A Renewal Request can be completed only when the exact request and Lease have a dated, private, Current supporting document:
+
+- `Renewal Letter` for Renew, Renegotiate, or Relocate.
+- `Approval` for Terminate.
+
+For new records, that Current document must be submitted. A legacy Current record is accepted for backward compatibility. Draft, Superseded, and Cancelled documents cannot satisfy the completion requirement.
 
 ## 12. Rent Schedules and Payment Tracking
 
@@ -657,11 +674,11 @@ Every valid transition is written to `Decision History` with:
 When a request moves to `Completed`:
 
 - The system checks that proposed lease dates exist.
-- A current private `Renewal Letter` Lease Document must be linked to the same Lease and the exact Renewal Request and must have a Document Date.
+- A submitted Current private `Renewal Letter` Lease Document must be linked to the same Lease and the exact Renewal Request and must have a Document Date. A legacy Current record is accepted for upgrade compatibility; Draft, Superseded, and Cancelled records are not.
 - If the recommendation is not `Terminate`, the system creates a successor lease automatically if one does not already exist.
 - The successor lease carries forward the main lease structure and uses the approved proposed terms.
 
-Only `Lease Administrator` can perform the configured `Mark Executed` transition. Completing a termination uses a current private `Approval` document instead of a Renewal Letter.
+Only `Lease Administrator` can perform the configured `Mark Executed` transition. Completing a termination uses a submitted Current private `Approval` document instead of a Renewal Letter, with legacy Current evidence accepted only for upgrade compatibility.
 
 ### 13.8 Open-Cycle Control
 

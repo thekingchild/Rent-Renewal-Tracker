@@ -6,6 +6,9 @@ from frappe.utils.file_manager import save_file
 from rent_renewal_tracker.patches.v0_6.initialize_required_settings_and_document_families import (
     execute as run_v0_6_upgrade_patch,
 )
+from rent_renewal_tracker.patches.v0_8.enable_lease_document_submission_compatibility import (
+    execute as run_v0_8_upgrade_patch,
+)
 
 
 class TestLeaseDocument(IntegrationTestCase):
@@ -80,17 +83,14 @@ class TestLeaseDocument(IntegrationTestCase):
         self.assertEqual(attachment.attached_to_name, document.name)
 
     def test_accepts_file_uploaded_against_unsaved_document(self):
-        content = f"test-{frappe.generate_hash(length=12)}".encode()
         file_doc = save_file(
             f"lease-document-{frappe.generate_hash(length=8)}.txt",
-            content,
+            f"test-{frappe.generate_hash(length=12)}".encode(),
             "Lease Document",
             f"new-lease-document-{frappe.generate_hash(length=8)}",
             is_private=1,
         )
-
         document = self.make_document(file_doc.file_url).insert()
-
         attachment = frappe.db.get_value(
             "File", file_doc.name, ["attached_to_doctype", "attached_to_name"], as_dict=True
         )
@@ -100,7 +100,6 @@ class TestLeaseDocument(IntegrationTestCase):
     def test_reuses_permitted_file_without_moving_original_attachment(self):
         file_doc = self.make_file(is_private=1)
         original = self.make_document(file_doc.file_url).insert()
-
         reused = self.make_document(file_doc.file_url, title="Agreement Copy").insert()
 
         attachment = frappe.db.get_value(
@@ -110,74 +109,139 @@ class TestLeaseDocument(IntegrationTestCase):
         self.assertEqual(attachment.attached_to_doctype, "Lease Document")
         self.assertEqual(attachment.attached_to_name, original.name)
 
-    def test_rejects_public_file(self):
-        file_doc = self.make_file(is_private=0)
+    def test_rejects_public_file_and_disallowed_extension(self):
+        public_file = self.make_file(is_private=0)
+        self.assertRaises(frappe.ValidationError, self.make_document(public_file.file_url).insert)
 
-        self.assertRaises(frappe.ValidationError, self.make_document(file_doc.file_url).insert)
-
-    def test_rejects_disallowed_extension(self):
-        file_doc = self.make_file(is_private=1, extension="exe")
-
-        self.assertRaises(frappe.ValidationError, self.make_document(file_doc.file_url).insert)
+        executable = self.make_file(is_private=1, extension="exe")
+        self.assertRaises(frappe.ValidationError, self.make_document(executable.file_url).insert)
 
     def test_rejects_invalid_effective_period(self):
-        file_doc = self.make_file(is_private=1)
         document = self.make_document(
-            file_doc.file_url,
+            self.make_file(is_private=1).file_url,
             effective_date=add_days(today(), 10),
             expiry_date=today(),
         )
-
         self.assertRaises(frappe.ValidationError, document.insert)
 
-    def test_derives_expiry_attention_status(self):
-        file_doc = self.make_file(is_private=1)
+    def test_draft_becomes_current_only_on_submit(self):
         document = self.make_document(
-            file_doc.file_url,
+            self.make_file(is_private=1).file_url,
             effective_date=add_days(today(), -30),
             expiry_date=add_days(today(), -1),
         ).insert()
 
+        self.assertEqual(document.docstatus, 0)
+        self.assertEqual(document.document_status, "Draft")
+        self.assertEqual(document.revision_status, "Draft")
+        document.submit()
+
+        self.assertEqual(document.docstatus, 1)
         self.assertEqual(document.document_status, "Expired")
+        self.assertEqual(document.revision_status, "Current")
         self.assertEqual(document.document_family_id, document.name)
         self.assertEqual(document.revision_number, 1)
-        self.assertEqual(document.revision_status, "Current")
 
-    def test_new_revision_supersedes_previous_document(self):
-        original_file = self.make_file(is_private=1)
-        original = self.make_document(
-            original_file.file_url,
-            effective_date=add_days(today(), -30),
-            expiry_date=add_days(today(), 30),
+    def test_formal_document_requires_date_at_submission(self):
+        document = self.make_document(
+            self.make_file(is_private=1).file_url, document_date=None
         ).insert()
-        revision_file = self.make_file(is_private=1)
+        self.assertEqual(document.document_status, "Draft")
+        self.assertRaises(frappe.ValidationError, document.submit)
+
+    def test_draft_revision_does_not_supersede_until_submit(self):
+        original = self.make_document(self.make_file(is_private=1).file_url).insert().submit()
         revision = self.make_document(
-            revision_file.file_url,
+            self.make_file(is_private=1).file_url,
             previous_revision=original.name,
             revision_reason="Executed terms replaced the earlier copy.",
         ).insert()
 
         original.reload()
+        self.assertEqual(original.revision_status, "Current")
+        self.assertEqual(revision.revision_status, "Draft")
         self.assertEqual(revision.revision_number, 2)
-        self.assertEqual(revision.document_family_id, original.document_family_id)
-        self.assertEqual(original.document_family_id, original.name)
+        revision.submit()
+        original.reload()
+
+        self.assertEqual(revision.revision_status, "Current")
         self.assertEqual(original.revision_status, "Superseded")
         self.assertEqual(original.document_status, "Superseded")
-        self.assertFalse(original.days_to_document_expiry)
 
-        rejected_file = self.make_file(is_private=1)
-        rejected_revision = self.make_document(
-            rejected_file.file_url,
+    def test_cancellation_requires_reason_and_restores_previous_revision(self):
+        original = self.make_document(self.make_file(is_private=1).file_url).insert().submit()
+        revision = self.make_document(
+            self.make_file(is_private=1).file_url,
             previous_revision=original.name,
-            revision_reason="Attempted branch from a superseded revision.",
-        )
+            revision_reason="Replace executed evidence.",
+        ).insert().submit()
 
+        self.assertRaises(frappe.ValidationError, revision.cancel)
+        revision.reload()
+        revision.cancellation_reason = "The uploaded execution copy was invalid."
+        revision.save()
+        revision.cancel()
+        original.reload()
+
+        self.assertEqual(revision.docstatus, 2)
+        self.assertEqual(revision.revision_status, "Cancelled")
+        self.assertEqual(revision.document_status, "Cancelled")
+        self.assertEqual(original.revision_status, "Current")
+
+    def test_superseded_revision_cannot_be_cancelled(self):
+        original = self.make_document(self.make_file(is_private=1).file_url).insert().submit()
+        self.make_document(
+            self.make_file(is_private=1).file_url,
+            previous_revision=original.name,
+            revision_reason="New executed evidence.",
+        ).insert().submit()
+        original.reload()
+        original.cancellation_reason = "Should not be permitted."
+        original.save()
+        self.assertRaises(frappe.ValidationError, original.cancel)
+
+    def test_cancelled_document_can_be_amended_and_resubmitted(self):
+        original = self.make_document(self.make_file(is_private=1).file_url).insert().submit()
+        original.cancellation_reason = "Metadata requires correction."
+        original.save()
+        original.cancel()
+
+        amendment = frappe.copy_doc(original)
+        amendment.docstatus = 0
+        amendment.amended_from = original.name
+        amendment.revision_reason = "Corrected metadata after cancellation."
+        amendment.title = "Corrected Signed Lease Agreement"
+        amendment.insert()
+        self.assertFalse(amendment.cancellation_reason)
+        amendment.submit()
+
+        self.assertEqual(amendment.amended_from, original.name)
+        self.assertEqual(amendment.document_family_id, original.document_family_id)
+        self.assertEqual(amendment.revision_number, 2)
+        self.assertEqual(amendment.revision_status, "Current")
+
+    def test_draft_file_can_change_but_submitted_file_is_immutable(self):
+        document = self.make_document(self.make_file(is_private=1).file_url).insert()
+        replacement = self.make_file(is_private=1)
+        document.file = replacement.file_url
+        document.save()
+        document.submit()
+
+        document.file = self.make_file(is_private=1).file_url
+        with self.assertRaises((frappe.ValidationError, frappe.UpdateAfterSubmitError)):
+            document.save()
+
+    def test_only_true_drafts_can_be_deleted(self):
+        draft = self.make_document(self.make_file(is_private=1).file_url).insert()
+        draft.delete()
+        self.assertFalse(frappe.db.exists("Lease Document", draft.name))
+
+        submitted = self.make_document(self.make_file(is_private=1).file_url).insert().submit()
         with self.assertRaises(frappe.ValidationError):
-            rejected_revision.insert()
+            submitted.delete()
 
-    def test_upgrade_patch_repairs_revision_and_confidentiality_metadata(self):
-        file_doc = self.make_file(is_private=1)
-        document = self.make_document(file_doc.file_url).insert()
+    def test_upgrade_patch_repairs_and_marks_legacy_metadata(self):
+        document = self.make_document(self.make_file(is_private=1).file_url).insert()
         frappe.db.set_value(
             "Lease Document",
             document.name,
@@ -189,19 +253,28 @@ class TestLeaseDocument(IntegrationTestCase):
             },
             update_modified=False,
         )
-
         run_v0_6_upgrade_patch()
+        run_v0_8_upgrade_patch()
+        run_v0_8_upgrade_patch()
         document.reload()
 
         self.assertEqual(document.document_family_id, document.name)
         self.assertEqual(document.revision_number, 1)
         self.assertEqual(document.revision_status, "Current")
         self.assertEqual(document.confidentiality, "Confidential")
+        self.assertTrue(document.legacy_unsubmitted)
 
-    def test_existing_file_cannot_be_replaced_in_place(self):
-        original_file = self.make_file(is_private=1)
-        document = self.make_document(original_file.file_url).insert()
-        replacement = self.make_file(is_private=1)
-        document.file = replacement.file_url
+    def test_legacy_current_record_can_be_submitted_without_state_change(self):
+        document = self.make_document(self.make_file(is_private=1).file_url).insert()
+        frappe.db.set_value(
+            "Lease Document",
+            document.name,
+            {"revision_status": "Current", "document_status": "No Expiry Date", "legacy_unsubmitted": 1},
+            update_modified=False,
+        )
+        document.reload()
+        document.submit()
 
-        self.assertRaises(frappe.ValidationError, document.save)
+        self.assertEqual(document.docstatus, 1)
+        self.assertEqual(document.revision_status, "Current")
+        self.assertFalse(document.legacy_unsubmitted)
