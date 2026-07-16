@@ -422,9 +422,34 @@ Role effects are:
 - `Lease Auditor` has read, print, and export clearance through Restricted; assignment or department scope still applies.
 - `Lease Viewer` has read-and-print access only to authorized Internal documents on parent leases within the role's Public or Internal clearance.
 
+### 11.2 Who Can Create a Lease Document?
+
+Under the application's default DocType permissions:
+
+- `Administrator` can create a Lease Document linked to any existing Lease because Frappe grants Administrator a permission bypass.
+- `Rent Renewal System Manager` and `Lease Administrator` can create a Lease Document linked to any existing Lease. These roles bypass Lease assignment, department scope, and confidentiality filters.
+- `Responsible Officer` can create a Lease Document only when the linked Lease is within the user's assignment or Lease Department scope and both the parent Lease and the document are within the user's confidentiality clearance.
+- `System Manager` by itself cannot create a Lease Document. The role bypasses the application's record-level Lease filters, but it does not have Lease Document create permission in the default DocType permission matrix. The user must also hold `Rent Renewal System Manager`, `Lease Administrator`, `Responsible Officer`, or an explicitly configured custom create permission.
+- `Department Head`, `Finance Approver`, `Legal Approver`, `Management Approver`, `Lease Auditor`, and `Lease Viewer` cannot create Lease Documents with only those roles. Their default Lease Document access is read-oriented.
+
+The `Lease` field is mandatory and must link to a saved Lease. Being named as Responsible Officer, Contract Owner, Backup Officer, a Lease contact, or an approver does not by itself grant Lease Document creation. The user must first have a role that grants Lease Document create permission.
+
+### 11.3 Exact Linked-Lease Requirements for a Responsible Officer
+
+A user relying on the `Responsible Officer` role must satisfy at least one of these scope conditions on the selected Lease:
+
+- The user's account is entered in `Responsible Officer`.
+- The user's account is entered in `Contract Owner`.
+- The user's account is entered in `Backup Officer`.
+- The user has a Frappe User Permission with `Allow` set to `Lease Department`, `For Value` matching the Lease's `Responsible Department`, and `Applicable For` set to `Lease` or left blank.
+
+Scope alone is not sufficient. A user with only the `Responsible Officer` role has clearance for Public, Internal, and Confidential parent Leases and for Internal and Confidential Lease Documents. That role cannot create a Restricted Lease Document or create against a Restricted Lease.
+
+Frappe combines permissions from all roles assigned to a user. For example, a user who has both `Responsible Officer` and `Legal Approver`, `Management Approver`, or `Lease Auditor` receives Lease Document create permission from `Responsible Officer` and Restricted clearance from the additional role. The user can then create a Restricted Lease Document for a Restricted Lease only when the assignment or Lease Department scope condition is also satisfied.
+
 Every attached file must also be private. The application checks the user's permission to use the File record, its owner or original attachment, the allowed file extension, and the site's maximum file size. After attachment, Frappe resolves private-file access through the Lease Document, so the linked Lease scope and document confidentiality rule also govern file reads and downloads.
 
-### 11.2 Creating and Controlling Revisions
+### 11.4 Creating and Controlling Revisions
 
 The `Create Revision` action appears only for a current revision when the user can create Lease Documents and can write the current record. The new record receives its name before the application assigns Document Family ID, Revision number, Revised By, and Revised On through Frappe's validation lifecycle. A revision must use a different private file, remain on the same Lease, include a Revision Reason, and branch from the current revision. Saving it updates the previous revision through the normal Frappe save lifecycle, including permission checks and change tracking, and marks the previous revision `Superseded`.
 

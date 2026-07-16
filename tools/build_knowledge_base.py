@@ -319,6 +319,8 @@ Access is the intersection of four controls: application role, DocType permissio
 
 Administrator, System Manager, Rent Renewal System Manager, and Lease Administrator bypass the lease assignment and confidentiality filters. This is operationally powerful; assign these roles only to trusted administrators. It does not change every DocType's create/write permission: the DocType matrix still determines what each role can do.
 
+For Lease Document specifically, the default create grant belongs to Rent Renewal System Manager, Lease Administrator, and Responsible Officer. Administrator retains the Frappe permission bypass. System Manager alone bypasses the record-level filter but cannot create a Lease Document because the default Lease Document permission matrix does not grant that role create permission.
+
 ### 22.3 Assigned-user and department access
 
 For scoped users, a lease is visible when the user is the Responsible Officer, Contract Owner, or Backup Officer, or when a Frappe User Permission grants that user the lease's Lease Department. The User Permission must allow Lease Department, match Responsible Department, and either be globally applicable or applicable to Lease. The same rule flows down to Renewal Requests, Rent Schedules, Lease Documents, and Reminder Logs through their Lease link. Lease Documents add their own confidentiality check after the parent Lease check.
@@ -328,6 +330,8 @@ When a new Lease is saved, the same scope is evaluated from its proposed values 
 ### 22.4 Confidentiality clearance
 
 Lease Viewer can see Public and Internal leases. Responsible Officer, Department Head, and Finance Approver can see Public, Internal, and Confidential leases. Legal Approver, Management Approver, and Lease Auditor can see Public, Internal, Confidential, and Restricted leases. A user with multiple roles receives the union of those clearances. Lease Document access must pass this parent clearance and the document's Internal, Confidential, or Restricted classification; a user may see the Lease while a stricter linked document and private file remain hidden.
+
+Role permissions are also combined. A user with Responsible Officer plus Legal Approver, Management Approver, or Lease Auditor receives Lease Document create permission from Responsible Officer and Restricted clearance from the additional role, but the user must still be assigned to the Lease or hold the matching Lease Department User Permission.
 
 ### 22.5 Workflow authorization and segregation of duties
 
