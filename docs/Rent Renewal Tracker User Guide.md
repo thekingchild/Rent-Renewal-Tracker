@@ -1,6 +1,6 @@
 # Rent Renewal Tracker User Guide
 
-Version: 1.3
+Version: 1.4
 
 Prepared: 16 July 2026
 
@@ -527,14 +527,28 @@ Open `Operations > Renewal Requests`.
 
 Use this screen to manage structured lease renewal decisions and approvals.
 
-### 13.1 Creating a Renewal Request
+### 13.1 Who Can Start a Lease Renewal?
 
-1. Open `Renewal Requests`.
-2. Click `Add Renewal Request`.
-3. Select the `Lease`.
-4. Complete the proposed terms and recommendation.
-5. Save the request in `Draft`.
-6. Use the workflow action to send it for review.
+Under the application's default Renewal Request permissions:
+
+- `Administrator` can create a Renewal Request for any Lease.
+- `Rent Renewal System Manager` and `Lease Administrator` can create a Renewal Request without Lease assignment, department-scope, or confidentiality restrictions.
+- `Responsible Officer` can create a Renewal Request only for a Lease within the user's assignment or Lease Department scope and confidentiality clearance.
+- `System Manager` by itself cannot create a Renewal Request. Record-level filter bypass does not grant the Renewal Request create permission that is absent from the default DocType permission matrix.
+- `Department Head`, `Finance Approver`, `Legal Approver`, `Management Approver`, `Lease Auditor`, and `Lease Viewer` cannot create a Renewal Request with only those roles.
+
+The recommended operational path is:
+
+1. Open a submitted Lease.
+2. Open the `Lifecycle` menu.
+3. Select `Start Renewal`.
+4. Complete the proposed terms and recommendation in the generated Draft.
+5. Save the request.
+6. Use `Submit for Department Review`.
+
+The `Start Renewal` action accepts only submitted Leases whose status is `Active`, `Expiring Soon`, or `Expired`. If an open renewal request already exists, the existing request opens. If an open termination request exists, it must be completed or cancelled first.
+
+Create-enabled users can also use `Add Renewal Request` from the Renewal Request list. The current application applies the submitted/status eligibility check through the `Start Renewal` action, not through direct list creation, so operational users should use the Lease lifecycle action as the standard entry point.
 
 The system automatically:
 
@@ -543,7 +557,22 @@ The system automatically:
 - Defaults proposed values from the current lease.
 - Fills `Requested By` and `Requested On`.
 
-### 13.2 Workflow States
+If `Create Renewal Request at First Threshold` is enabled in Rent Renewal Settings, the reminder engine may create a Draft automatically at the first configured reminder threshold. Human create permission is not used for that background action, but all subsequent record-scope and workflow-stage controls continue to apply.
+
+### 13.2 Exact Linked-Lease Requirements
+
+A user relying on the `Responsible Officer` role must satisfy at least one of these scope conditions:
+
+- The user's account is entered in the Lease's `Responsible Officer`.
+- The user's account is entered in `Contract Owner`.
+- The user's account is entered in `Backup Officer`.
+- The user has a Frappe User Permission with `Allow` set to `Lease Department`, `For Value` matching the Lease's `Responsible Department`, and `Applicable For` set to `Lease` or left blank.
+
+A Responsible Officer alone has clearance for Public, Internal, and Confidential Leases, but not Restricted Leases. Frappe combines role clearances, so a Responsible Officer who also has `Legal Approver`, `Management Approver`, `Lease Auditor`, or an unrestricted operational role can receive Restricted clearance.
+
+The same linked-Lease authorization is required for every scoped workflow approver. A workflow role does not by itself grant access to the Renewal Request. The approver must also be assigned to the Lease or hold the matching Lease Department User Permission and must have sufficient confidentiality clearance.
+
+### 13.3 Workflow States
 
 The renewal process follows this sequence:
 
@@ -559,20 +588,26 @@ Possible exit state:
 
 - `Rejected`
 
-### 13.3 Who Acts at Each Stage
+### 13.4 Who Acts at Each Stage
 
-- `Responsible Officer` or `Lease Administrator`: submit draft for department review
-- `Department Head`: approve to finance or return to draft
-- `Finance Approver`: approve to legal or return to draft
-- `Legal Approver`: approve to management or return to draft
-- `Management Approver`: approve or reject
-- `Lease Administrator`: mark approved renewal as executed
+- `Draft`: `Responsible Officer` edits the proposal. `Responsible Officer` or `Lease Administrator` can submit it for Department Review.
+- `Department Review`: `Department Head` can approve to Finance Review or return the request to Draft.
+- `Finance Review`: `Finance Approver` can approve to Legal Review or return the request to Draft.
+- `Legal Review`: `Legal Approver` can approve to Management Approval or return the request to Draft.
+- `Management Approval`: `Management Approver` can approve the request or reject it.
+- `Approved`: `Lease Administrator` can use `Mark Executed` to complete the renewal.
+
+`Administrator` can perform all stages. `Rent Renewal System Manager` has broad Renewal Request DocType permissions and unrestricted record scope, but that role alone is not listed for a workflow transition. The user must also hold the role assigned to the current workflow action. Likewise, `Lease Administrator` can submit a Draft and execute an Approved request, but cannot replace the Department, Finance, Legal, or Management approver without also holding that stage's role.
 
 Important control:
 
 - The original requester cannot approve their own review stage.
+- Return and Reject require a workflow comment.
+- Role permissions and confidentiality clearances are combined when a user has multiple roles.
+- Department Head and Finance Approver have clearance through Confidential. Acting on a Restricted Lease requires an additional role that supplies Restricted clearance or an unrestricted operational role.
+- Legal Approver and Management Approver have Restricted clearance but still require Lease assignment or department scope unless they also hold an unrestricted operational role.
 
-### 13.4 Proposal and Recommendation Fields
+### 13.5 Proposal and Recommendation Fields
 
 Important fields include:
 
@@ -599,7 +634,7 @@ Recommendation values:
 - `Relocate`
 - `Terminate`
 
-### 13.5 Workflow Comments and Decision History
+### 13.6 Workflow Comments and Decision History
 
 Use `Workflow Comment` whenever context is needed.
 
@@ -617,18 +652,26 @@ Every valid transition is written to `Decision History` with:
 - action date/time
 - comment
 
-### 13.6 Completion Behavior
+### 13.7 Completion Behavior
 
 When a request moves to `Completed`:
 
 - The system checks that proposed lease dates exist.
-- The required supporting document must already be attached as a `Lease Document`.
+- A current private `Renewal Letter` Lease Document must be linked to the same Lease and the exact Renewal Request and must have a Document Date.
 - If the recommendation is not `Terminate`, the system creates a successor lease automatically if one does not already exist.
 - The successor lease carries forward the main lease structure and uses the approved proposed terms.
 
-### 13.7 Open-Cycle Control
+Only `Lease Administrator` can perform the configured `Mark Executed` transition. Completing a termination uses a current private `Approval` document instead of a Renewal Letter.
+
+### 13.8 Open-Cycle Control
 
 Only one open renewal request is allowed per lease at a time. The system blocks creation of another active cycle until the previous one is completed, rejected, or cancelled.
+
+### 13.9 Current Interface and Workflow Limitations
+
+- The Lease form currently displays `Start Renewal` based on Lease status and submission state rather than checking Renewal Request create permission. A read-only user may see the button, but the server rejects unauthorized creation.
+- `Rent Renewal System Manager` can create a Renewal Request but cannot progress it through workflow transitions with that role alone.
+- Direct `Add Renewal Request` creation does not use the same submitted/status eligibility gate as the recommended `Start Renewal` lifecycle action.
 
 ## 14. Automated Status Updates
 
