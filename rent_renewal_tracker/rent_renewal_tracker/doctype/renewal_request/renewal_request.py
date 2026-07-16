@@ -20,6 +20,22 @@ STATE_ACTIONS = {
 }
 
 
+def has_eligible_completion_document(*, lease, renewal_request, category):
+    documents = frappe.get_all(
+        "Lease Document",
+        filters={
+            "lease": lease,
+            "renewal_request": renewal_request,
+            "category": category,
+            "document_date": ["is", "set"],
+            "revision_status": "Current",
+            "docstatus": ["<", 2],
+        },
+        fields=["docstatus", "legacy_unsubmitted"],
+    )
+    return any(document.docstatus == 1 or document.legacy_unsubmitted for document in documents)
+
+
 class RenewalRequest(Document):
     def before_insert(self):
         self.set_sequence_and_snapshot()
@@ -203,13 +219,9 @@ class RenewalRequest(Document):
         if self.recommendation != "Terminate" and (not self.proposed_start_date or not self.proposed_end_date):
             frappe.throw(_("Proposed lease dates are required before completion."))
         document_category = "Approval" if self.recommendation == "Terminate" else "Renewal Letter"
-        if not frappe.db.exists("Lease Document", {
-            "lease": self.lease,
-            "renewal_request": self.name,
-            "category": document_category,
-            "document_date": ["is", "set"],
-            "revision_status": "Current",
-        }):
+        if not has_eligible_completion_document(
+            lease=self.lease, renewal_request=self.name, category=document_category
+        ):
             frappe.throw(
                 _("A private {0} document is required before completion.").format(document_category)
             )

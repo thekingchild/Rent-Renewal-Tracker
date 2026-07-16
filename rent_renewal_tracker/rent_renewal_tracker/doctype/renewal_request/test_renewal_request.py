@@ -1,6 +1,11 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, getdate, today
+from frappe.utils.file_manager import save_file
+
+from rent_renewal_tracker.rent_renewal_tracker.doctype.renewal_request.renewal_request import (
+    has_eligible_completion_document,
+)
 
 
 class TestRenewalRequest(IntegrationTestCase):
@@ -126,3 +131,57 @@ class TestRenewalRequest(IntegrationTestCase):
         self.assertEqual(getdate(successor.start_date), getdate(add_days(self.lease.end_date, 1)))
         self.assertEqual(getdate(successor.end_date), getdate(renewal.proposed_end_date))
         self.assertEqual(successor.annual_rent, renewal.proposed_annual_rent)
+
+
+    def make_completion_document(self, renewal, **overrides):
+        file_doc = save_file(
+            f"renewal-evidence-{frappe.generate_hash(length=8)}.txt",
+            f"renewal-{frappe.generate_hash(length=12)}".encode(),
+            "Lease",
+            self.lease.name,
+            is_private=1,
+        )
+        values = {
+            "doctype": "Lease Document",
+            "lease": self.lease.name,
+            "renewal_request": renewal.name,
+            "title": "Executed Renewal Letter",
+            "category": "Renewal Letter",
+            "file": file_doc.file_url,
+            "document_date": today(),
+            "confidentiality": "Confidential",
+        }
+        values.update(overrides)
+        return frappe.get_doc(values).insert()
+
+    def test_completion_document_must_be_submitted_or_legacy_current_evidence(self):
+        renewal = self.make_request().insert()
+        draft = self.make_completion_document(renewal)
+
+        self.assertFalse(
+            has_eligible_completion_document(
+                lease=self.lease.name, renewal_request=renewal.name, category="Renewal Letter"
+            )
+        )
+        draft.submit()
+        self.assertTrue(
+            has_eligible_completion_document(
+                lease=self.lease.name, renewal_request=renewal.name, category="Renewal Letter"
+            )
+        )
+
+    def test_legacy_current_document_remains_valid_for_completion(self):
+        renewal = self.make_request().insert()
+        document = self.make_completion_document(renewal)
+        frappe.db.set_value(
+            "Lease Document",
+            document.name,
+            {"revision_status": "Current", "document_status": "No Expiry Date", "legacy_unsubmitted": 1},
+            update_modified=False,
+        )
+
+        self.assertTrue(
+            has_eligible_completion_document(
+                lease=self.lease.name, renewal_request=renewal.name, category="Renewal Letter"
+            )
+        )

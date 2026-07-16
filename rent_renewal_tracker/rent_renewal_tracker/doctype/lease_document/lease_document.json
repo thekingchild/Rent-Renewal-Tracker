@@ -1,57 +1,327 @@
 {
- "actions": [],
- "autoname": "format:LDOC-.YYYY.-{#####}",
- "creation": "2026-07-10 00:00:00.000000",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": ["lease", "renewal_request", "title", "category", "file", "document_section", "document_date", "effective_date", "expiry_date", "document_status", "days_to_document_expiry", "revision_section", "document_family_id", "revision_number", "previous_revision", "revision_status", "revision_reason", "revised_by", "revised_on", "version_label", "confidentiality", "uploaded_by", "notes"],
- "fields": [
-  {"fieldname": "lease", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Lease", "options": "Lease", "reqd": 1, "description": "Lease record that this document belongs to."},
-  {"fieldname": "renewal_request", "fieldtype": "Link", "in_standard_filter": 1, "label": "Lifecycle Request", "options": "Renewal Request", "description": "The exact renewal or termination request supported by this document."},
-  {"fieldname": "title", "fieldtype": "Data", "in_global_search": 1, "in_list_view": 1, "label": "Title", "reqd": 1, "description": "Document title shown in search and list views."},
-  {"fieldname": "category", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Category", "options": "Signed Agreement\nAddendum\nRenewal Letter\nApproval\nPayment Receipt\nValuation\nCorrespondence\nOther", "reqd": 1, "description": "Document type or business purpose of the file."},
-  {"fieldname": "file", "fieldtype": "Attach", "label": "Private File", "reqd": 1, "description": "Private attachment stored against the lease document."},
-  {"fieldname": "document_section", "fieldtype": "Section Break", "label": "Document Details"},
-  {"fieldname": "document_date", "fieldtype": "Date", "label": "Document Date", "description": "Date printed or signed on the document."},
-  {"fieldname": "effective_date", "fieldtype": "Date", "label": "Effective Date", "description": "Date the document terms take effect."},
-  {"fieldname": "expiry_date", "fieldtype": "Date", "in_list_view": 1, "in_standard_filter": 1, "label": "Expiry Date", "description": "Document expiry or review date, if applicable."},
-  {"fieldname": "document_status", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Document Status", "options": "No Expiry Date\nCurrent\nExpiring Soon\nExpired\nSuperseded", "read_only": 1},
-  {"fieldname": "days_to_document_expiry", "fieldtype": "Int", "label": "Days to Document Expiry", "read_only": 1},
-  {"fieldname": "revision_section", "fieldtype": "Section Break", "label": "Revision Control"},
-  {"fieldname": "document_family_id", "fieldtype": "Data", "hidden": 1, "label": "Document Family ID", "read_only": 1, "search_index": 1},
-  {"fieldname": "revision_number", "fieldtype": "Int", "in_list_view": 1, "label": "Revision", "read_only": 1},
-  {"fieldname": "previous_revision", "fieldtype": "Link", "label": "Previous Revision", "options": "Lease Document", "read_only_depends_on": "eval:!doc.__islocal"},
-  {"default": "Current", "fieldname": "revision_status", "fieldtype": "Select", "in_standard_filter": 1, "label": "Revision Status", "options": "Current\nSuperseded", "read_only": 1},
-  {"depends_on": "previous_revision", "fieldname": "revision_reason", "fieldtype": "Small Text", "label": "Revision Reason", "mandatory_depends_on": "previous_revision"},
-  {"fieldname": "revised_by", "fieldtype": "Link", "label": "Revised By", "options": "User", "read_only": 1},
-  {"fieldname": "revised_on", "fieldtype": "Datetime", "label": "Revised On", "read_only": 1},
-  {"fieldname": "version_label", "fieldtype": "Data", "label": "Version Label", "description": "Version identifier such as Draft, Executed, or v2."},
-  {"default": "Confidential", "fieldname": "confidentiality", "fieldtype": "Select", "in_standard_filter": 1, "label": "Confidentiality", "options": "Internal\nConfidential\nRestricted", "reqd": 1, "description": "Access classification for the attached document."},
-  {"default": "__user", "fieldname": "uploaded_by", "fieldtype": "Link", "label": "Uploaded By", "options": "User", "read_only": 1, "description": "User who uploaded the document record."},
-  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes", "description": "Additional context about the document or its storage."}
- ],
- "index_web_pages_for_search": 0,
- "links": [],
- "modified": "2026-07-10 00:00:00.000000",
- "modified_by": "Administrator",
- "module": "Rent Renewal Tracker",
- "name": "Lease Document",
- "naming_rule": "Expression",
- "owner": "Administrator",
- "permissions": [
-  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Rent Renewal System Manager", "share": 1, "write": 1},
-  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Lease Administrator", "share": 1, "write": 1},
-  {"create": 1, "print": 1, "read": 1, "role": "Responsible Officer", "write": 1},
-  {"print": 1, "read": 1, "role": "Department Head"},
-  {"print": 1, "read": 1, "role": "Finance Approver"},
-  {"print": 1, "read": 1, "role": "Legal Approver"},
-  {"print": 1, "read": 1, "role": "Management Approver"},
-  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "Lease Auditor"},
-  {"print": 1, "read": 1, "role": "Lease Viewer"}
- ],
- "sort_field": "creation",
- "sort_order": "DESC",
- "states": [],
- "title_field": "title",
- "track_changes": 1
+  "actions": [],
+  "autoname": "format:LDOC-.YYYY.-{#####}",
+  "creation": "2026-07-10 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "lease",
+    "renewal_request",
+    "title",
+    "category",
+    "file",
+    "document_section",
+    "document_date",
+    "effective_date",
+    "expiry_date",
+    "document_status",
+    "days_to_document_expiry",
+    "revision_section",
+    "document_family_id",
+    "revision_number",
+    "previous_revision",
+    "revision_status",
+    "revision_reason",
+    "cancellation_reason",
+    "revised_by",
+    "revised_on",
+    "version_label",
+    "confidentiality",
+    "uploaded_by",
+    "legacy_unsubmitted",
+    "amended_from",
+    "notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "lease",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Lease",
+      "options": "Lease",
+      "reqd": 1,
+      "description": "Lease record that this document belongs to."
+    },
+    {
+      "fieldname": "renewal_request",
+      "fieldtype": "Link",
+      "in_standard_filter": 1,
+      "label": "Lifecycle Request",
+      "options": "Renewal Request",
+      "description": "The exact renewal or termination request supported by this document."
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "in_global_search": 1,
+      "in_list_view": 1,
+      "label": "Title",
+      "reqd": 1,
+      "description": "Document title shown in search and list views."
+    },
+    {
+      "fieldname": "category",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Category",
+      "options": "Signed Agreement\nAddendum\nRenewal Letter\nApproval\nPayment Receipt\nValuation\nCorrespondence\nOther",
+      "reqd": 1,
+      "description": "Document type or business purpose of the file."
+    },
+    {
+      "fieldname": "file",
+      "fieldtype": "Attach",
+      "label": "Private File",
+      "reqd": 1,
+      "description": "Private attachment stored against the lease document."
+    },
+    {
+      "fieldname": "document_section",
+      "fieldtype": "Section Break",
+      "label": "Document Details"
+    },
+    {
+      "fieldname": "document_date",
+      "fieldtype": "Date",
+      "label": "Document Date",
+      "description": "Date printed or signed on the document."
+    },
+    {
+      "fieldname": "effective_date",
+      "fieldtype": "Date",
+      "label": "Effective Date",
+      "description": "Date the document terms take effect."
+    },
+    {
+      "fieldname": "expiry_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Expiry Date",
+      "description": "Document expiry or review date, if applicable."
+    },
+    {
+      "fieldname": "document_status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Document Status",
+      "options": "Draft\nNo Expiry Date\nCurrent\nExpiring Soon\nExpired\nSuperseded\nCancelled",
+      "read_only": 1,
+      "allow_on_submit": 1
+    },
+    {
+      "fieldname": "days_to_document_expiry",
+      "fieldtype": "Int",
+      "label": "Days to Document Expiry",
+      "read_only": 1,
+      "allow_on_submit": 1
+    },
+    {
+      "fieldname": "revision_section",
+      "fieldtype": "Section Break",
+      "label": "Revision Control"
+    },
+    {
+      "fieldname": "document_family_id",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Document Family ID",
+      "read_only": 1,
+      "search_index": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "revision_number",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Revision",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "previous_revision",
+      "fieldtype": "Link",
+      "label": "Previous Revision",
+      "options": "Lease Document",
+      "read_only_depends_on": "eval:!doc.__islocal",
+      "no_copy": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "revision_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Revision Status",
+      "options": "Draft\nCurrent\nSuperseded\nCancelled",
+      "read_only": 1,
+      "allow_on_submit": 1
+    },
+    {
+      "depends_on": "eval:doc.previous_revision || doc.amended_from",
+      "fieldname": "revision_reason",
+      "fieldtype": "Small Text",
+      "label": "Revision Reason",
+      "mandatory_depends_on": "eval:doc.previous_revision || doc.amended_from",
+      "no_copy": 1
+    },
+    {
+      "fieldname": "revised_by",
+      "fieldtype": "Link",
+      "label": "Revised By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "revised_on",
+      "fieldtype": "Datetime",
+      "label": "Revised On",
+      "read_only": 1
+    },
+    {
+      "fieldname": "version_label",
+      "fieldtype": "Data",
+      "label": "Version Label",
+      "description": "Version identifier such as Draft, Executed, or v2."
+    },
+    {
+      "default": "Confidential",
+      "fieldname": "confidentiality",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Confidentiality",
+      "options": "Internal\nConfidential\nRestricted",
+      "reqd": 1,
+      "description": "Access classification for the attached document."
+    },
+    {
+      "default": "__user",
+      "fieldname": "uploaded_by",
+      "fieldtype": "Link",
+      "label": "Uploaded By",
+      "options": "User",
+      "read_only": 1,
+      "description": "User who uploaded the document record."
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes",
+      "description": "Additional context about the document or its storage."
+    },
+    {
+      "allow_on_submit": 1,
+      "fieldname": "cancellation_reason",
+      "fieldtype": "Small Text",
+      "label": "Cancellation Reason",
+      "read_only_depends_on": "eval:doc.docstatus != 1",
+      "description": "Required before cancelling a submitted current document.",
+      "no_copy": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "legacy_unsubmitted",
+      "fieldtype": "Check",
+      "hidden": 1,
+      "label": "Legacy Unsubmitted",
+      "no_copy": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Lease Document",
+      "print_hide": 1,
+      "read_only": 1,
+      "search_index": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-10 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Rent Renewal Tracker",
+  "name": "Lease Document",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Rent Renewal System Manager",
+      "share": 1,
+      "write": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Lease Administrator",
+      "share": 1,
+      "write": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "create": 1,
+      "print": 1,
+      "read": 1,
+      "role": "Responsible Officer",
+      "write": 1,
+      "submit": 1
+    },
+    {
+      "print": 1,
+      "read": 1,
+      "role": "Department Head"
+    },
+    {
+      "print": 1,
+      "read": 1,
+      "role": "Finance Approver"
+    },
+    {
+      "print": 1,
+      "read": 1,
+      "role": "Legal Approver"
+    },
+    {
+      "print": 1,
+      "read": 1,
+      "role": "Management Approver"
+    },
+    {
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Lease Auditor"
+    },
+    {
+      "print": 1,
+      "read": 1,
+      "role": "Lease Viewer"
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "title",
+  "track_changes": 1,
+  "is_submittable": 1
 }

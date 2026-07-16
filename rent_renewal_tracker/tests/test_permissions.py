@@ -75,6 +75,7 @@ class TestLeasePermissions(IntegrationTestCase):
                 "roles": [{"role": role}],
             }
         ).insert()
+        frappe.clear_cache(user=user)
         return user
 
     def new_lease(self, user, classification="Internal"):
@@ -390,3 +391,64 @@ class TestLeasePermissions(IntegrationTestCase):
 
         self.assertFalse(document.has_permission("write", user=user))
         self.assertFalse(revision.has_permission("create", user=user))
+
+
+    def test_submit_and_cancel_roles_follow_evidence_responsibilities(self):
+        for role in ("Rent Renewal System Manager", "Lease Administrator", "Responsible Officer"):
+            with self.subTest(role=role):
+                user = self.make_user(role)
+                lease = self.new_lease(user, classification="Internal").insert()
+                frappe.set_user(user)
+                try:
+                    document, _ = self.make_lease_document(lease, confidentiality="Confidential")
+                    self.assertTrue(document.has_permission("submit"))
+                    document.submit()
+                finally:
+                    frappe.set_user("Administrator")
+                self.assertEqual(document.docstatus, 1)
+
+        for role in ("Rent Renewal System Manager", "Lease Administrator"):
+            with self.subTest(cancel_role=role):
+                user = self.make_user(role)
+                lease = self.new_lease(user, classification="Internal").insert()
+                frappe.set_user(user)
+                try:
+                    document, _ = self.make_lease_document(lease, confidentiality="Confidential")
+                    document.submit()
+                    document.cancellation_reason = "Authorised evidence cancellation."
+                    document.save()
+                    self.assertTrue(document.has_permission("cancel"))
+                    document.cancel()
+                finally:
+                    frappe.set_user("Administrator")
+                self.assertEqual(document.docstatus, 2)
+
+    def test_responsible_officer_can_submit_but_cannot_cancel(self):
+        user = self.make_user("Responsible Officer")
+        lease = self.new_lease(user, classification="Internal").insert()
+        frappe.set_user(user)
+        try:
+            document, _ = self.make_lease_document(lease, confidentiality="Confidential")
+            document.submit()
+            document.cancellation_reason = "Responsible Officer must escalate cancellation."
+            document.save()
+            self.assertFalse(document.has_permission("cancel"))
+            with self.assertRaises(frappe.PermissionError):
+                document.cancel()
+        finally:
+            frappe.set_user("Administrator")
+
+    def test_read_only_roles_cannot_submit_or_cancel_lease_documents(self):
+        document, _ = self.make_lease_document(self.lease, confidentiality="Confidential")
+        for role in (
+            "Department Head",
+            "Finance Approver",
+            "Legal Approver",
+            "Management Approver",
+            "Lease Auditor",
+            "Lease Viewer",
+        ):
+            with self.subTest(role=role):
+                user = self.make_user(role)
+                self.assertFalse(document.has_permission("submit", user=user))
+                self.assertFalse(document.has_permission("cancel", user=user))

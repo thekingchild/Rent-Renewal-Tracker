@@ -319,7 +319,7 @@ Access is the intersection of four controls: application role, DocType permissio
 
 Administrator, System Manager, Rent Renewal System Manager, and Lease Administrator bypass the lease assignment and confidentiality filters. This is operationally powerful; assign these roles only to trusted administrators. It does not change every DocType's create/write permission: the DocType matrix still determines what each role can do.
 
-For Lease Document specifically, the default create grant belongs to Rent Renewal System Manager, Lease Administrator, and Responsible Officer. Administrator retains the Frappe permission bypass. System Manager alone bypasses the record-level filter but cannot create a Lease Document because the default Lease Document permission matrix does not grant that role create permission.
+For Lease Document, default create and submit grants belong to Rent Renewal System Manager, Lease Administrator, and Responsible Officer. Cancel is limited to Rent Renewal System Manager and Lease Administrator; Responsible Officer must escalate cancellation. Administrator retains the Frappe permission bypass. System Manager alone bypasses the record-level filter but cannot create, submit, or cancel because the default Lease Document permission matrix does not grant those actions. Custom grants still require linked-Lease and confidentiality authorization.
 
 ### 22.3 Assigned-user and department access
 
@@ -343,7 +343,7 @@ Workflow authority is separate from DocType authority. Rent Renewal System Manag
 
 ### 22.6 Private files and audit integrity
 
-Lease Documents accept only private files. The user must be able to read the File and either own an unattached upload, own a file attached to the lease/document, use a temporary upload, or have read access to the original attached record. Once attached, Frappe delegates File reads and downloads to the Lease Document permission decision. Existing document files cannot be replaced; a new revision requires create permission on Lease Document and write permission on the current revision. Reminder Logs cannot be edited manually and cannot be deleted except during uninstall.
+Lease Documents accept only private files. The user must be able to read the File and either own an unattached upload, own a file attached to the lease/document, use a temporary upload, or have read access to the original attached record. Once attached, Frappe delegates File reads and downloads to the Lease Document permission decision. True Draft files may be corrected before submission; submitted, cancelled, superseded, and legacy evidence cannot be replaced or deleted. Use a revision or standard Frappe amendment instead. Reminder Logs cannot be edited manually and cannot be deleted except during uninstall.
 
 ## 23. Lifecycle Actions: Renewal and Termination
 
@@ -367,17 +367,29 @@ Reject is available only at Management Approval and stores the workflow comment 
 
 ## 24. Lease Document Lifecycle and Revision Control
 
-### 24.1 Supported files and size limits
+### 24.1 Supported files and linked authorization
 
-Allowed extensions are CSV, DOCX, JPEG, JPG, PDF, PNG, TXT, and XLSX. The file must be private and must remain within the site's configured maximum file size.
+Allowed extensions are CSV, DOCX, JPEG, JPG, PDF, PNG, TXT, and XLSX. The file must be private and within the site's maximum size. Every action also requires the applicable DocType right plus access to the linked Lease, assignment or department scope for scoped users, parent and child confidentiality clearance, and File permission.
 
-### 24.2 Status calculation
+### 24.2 Draft and submit
 
-No Expiry Date is used when Expiry Date is blank. Current means the document is beyond the configured document-expiry warning window. Expiring Soon means the remaining days are at or below Document Expiring Soon Threshold. Expired means the date has passed. Superseded means a later revision exists. Daily automation refreshes these values.
+New records use DocStatus Draft, Revision Status Draft, and Document Status Draft. Saving does not supersede evidence. Rent Renewal System Manager, Lease Administrator, and an authorized Responsible Officer can submit; Administrator has the Frappe bypass. Formal categories require Document Date. Submission makes the revision Current, records the reviser and time, locks the file, calculates expiry status, and only then supersedes the previous revision.
 
-### 24.3 Creating a revision
+### 24.3 Revision
 
-Open the current Lease Document and select Create Revision. The action is shown only when the user can create Lease Documents and write the current revision. The new record inherits lease, lifecycle request, title, category, dates, and confidentiality. Upload a different private file and enter Revision Reason. Frappe assigns the new record name before Document Family ID and Revision number are calculated. Saving uses normal permission, validation, and change-tracking hooks to mark the previous revision Superseded and clear its expiry-attention value. Revisions must remain on the same lease and must branch only from the current revision; direct API calls receive the same checks.
+Create Revision is available from a submitted Current or legacy-current document to users with create permission and write access to that record. The revision stays on the same Lease, requires a different private file and Revision Reason, inherits the document family, and receives the next revision number. The old revision remains Current while the new record is Draft; it becomes Superseded only after the new revision is submitted.
+
+### 24.4 Cancel and restore
+
+Cancel is limited by default to Rent Renewal System Manager and Lease Administrator; Responsible Officer can submit but cannot cancel. Enter and save Cancellation Reason first. Only a submitted Current revision can be cancelled. Cancellation retains the record as Cancelled evidence and restores its immediate Superseded predecessor to Current when safe. Superseded revisions cannot be cancelled.
+
+### 24.5 Standard Frappe amendment
+
+Use Amend after cancellation. Frappe automatically sets Amended From. The amendment remains in the same family, receives the next revision number, must stay on the same Lease, and requires Revision Reason. It remains Draft until submitted. It may reuse the cancelled file for a metadata correction; an ordinary revision must use a new file.
+
+### 24.6 Expiry, renewal evidence, and legacy compatibility
+
+Daily automation and My Actions ignore Draft and Cancelled records. Submitted Current records receive No Expiry Date, Current, Expiring Soon, or Expired status. Renewal completion accepts only a dated Current document linked to the exact Lease and Renewal Request: submitted evidence for new records, or a legacy-current record retained for upgrade compatibility. Draft, Superseded, and Cancelled documents do not qualify. Upgrade marks old records Legacy Unsubmitted instead of silently submitting them and aligns only the app-managed Custom DocPerm submit/cancel grants, preserving unrelated custom permission settings.
 
 ## 25. Payment Evidence and Schedule Integrity
 
@@ -552,7 +564,7 @@ def add_final_sections(doc):
     doc.add_heading("30. Glossary and Status Reference", level=1)
     entries = [
         ("DocType", "A Frappe record type, comparable to a business object or database-backed form."),
-        ("Draft / Submitted / Cancelled", "Frappe document states 0, 1, and 2. Lease and Rent Schedule are submittable; workflow may submit Renewal Requests at Approved/Completed."),
+        ("Draft / Submitted / Cancelled", "Frappe document states 0, 1, and 2. Lease, Rent Schedule, and Lease Document are submittable; workflow may submit Renewal Requests at Approved/Completed."),
         ("Lease status", "Operational condition of the lease: Draft, Active, Expiring Soon, Renewal in Progress, Termination in Progress, Renewed, Expired, or Terminated."),
         ("Renewal status", "Summary copied to the lease: Not Started, Draft, Pending Approval, Approved, Rejected, Completed, or Not Renewing."),
         ("Workflow state", "The detailed approval position on a Renewal Request."),

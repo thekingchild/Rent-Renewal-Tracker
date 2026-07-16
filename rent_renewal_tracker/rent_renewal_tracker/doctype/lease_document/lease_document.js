@@ -4,6 +4,7 @@ frappe.ui.form.on("Lease Document", {
 			filters: {
 				lease: frm.doc.lease,
 				revision_status: "Current",
+				docstatus: ["<", 2],
 			},
 		}));
 	},
@@ -11,6 +12,7 @@ frappe.ui.form.on("Lease Document", {
 		const can_create_revision =
 			!frm.is_new() &&
 			frm.doc.revision_status === "Current" &&
+			(frm.doc.docstatus === 1 || frm.doc.legacy_unsubmitted) &&
 			frm.has_perm("write") &&
 			frappe.model.can_create("Lease Document");
 		if (can_create_revision) {
@@ -27,6 +29,12 @@ frappe.ui.form.on("Lease Document", {
 					previous_revision: frm.doc.name,
 				});
 			});
+		}
+		if (frm.doc.docstatus === 1 && frm.doc.revision_status === "Current" && !frm.doc.cancellation_reason) {
+			frm.dashboard.add_comment(__("Enter and save a Cancellation Reason before cancelling this document."), "yellow", true);
+		}
+		if (frm.doc.legacy_unsubmitted) {
+			frm.dashboard.add_comment(__("Legacy evidence: usable by existing workflows, but not yet submitted. Submit it when formally reviewed."), "blue", true);
 		}
 		if (["Expired", "Expiring Soon"].includes(frm.doc.document_status)) {
 			const color = frm.doc.document_status === "Expired" ? "red" : "orange";
