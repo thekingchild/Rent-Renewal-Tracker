@@ -337,6 +337,10 @@ Role permissions are also combined. A user with Responsible Officer plus Legal A
 
 An approver must have the role permitted for the current workflow transition and must be authorized for the lease. The requester cannot approve their own Department, Finance, Legal, or Management review stage. Return and Reject require a comment. Generic Frappe workflow email is disabled because it could attach a full PDF to every role holder; the application instead uses scoped notifications and reminder recipients.
 
+For Renewal Request creation, the default create grant belongs to Rent Renewal System Manager, Lease Administrator, and Responsible Officer, while Administrator retains the Frappe permission bypass. System Manager alone and the review-only roles cannot create a Renewal Request. A Responsible Officer must pass the same assignment or Lease Department scope and confidentiality checks as the linked Lease.
+
+Workflow authority is separate from DocType authority. Rent Renewal System Manager can create a Renewal Request but has no transition assigned to that role alone. Lease Administrator can submit a Draft and mark an Approved request executed, while Department Head, Finance Approver, Legal Approver, and Management Approver act only at their configured stages. Every scoped approver must also pass the linked-Lease authorization check.
+
 ### 22.6 Private files and audit integrity
 
 Lease Documents accept only private files. The user must be able to read the File and either own an unattached upload, own a file attached to the lease/document, use a temporary upload, or have read access to the original attached record. Once attached, Frappe delegates File reads and downloads to the Lease Document permission decision. Existing document files cannot be replaced; a new revision requires create permission on Lease Document and write permission on the current revision. Reminder Logs cannot be edited manually and cannot be deleted except during uninstall.
@@ -347,13 +351,15 @@ Lease Documents accept only private files. The user must be able to read the Fil
 
 On a submitted lease in Active, Expiring Soon, or Expired status, open Lifecycle and select Start Renewal or Start Termination. The application creates a Renewal Request with recommendation Renew or Terminate and opens it. If an open request of the same type already exists, the existing request opens. If the open request is of the other type, complete or cancel it first.
 
+The Lease lifecycle action is the recommended entry point because it applies the submitted/status eligibility checks. Direct Add Renewal Request creation remains available to create-enabled roles but does not currently apply that same eligibility gate. The Lease form may also display the lifecycle button to a read-only user; server-side create permission still prevents unauthorized creation.
+
 ### 23.2 Termination-specific behavior
 
 Termination uses the same approval chain. Outside Draft, Termination Effective Date and Termination Reason are mandatory. The parent lease displays Termination in Progress during the cycle. Before Mark Executed, attach a current private Approval document dated and linked to the lifecycle request. Completion marks the lease Terminated and does not create a successor lease.
 
 ### 23.3 Renewal-specific execution
 
-For Renew, Renegotiate, or Relocate, the approved request requires proposed property, start date, end date, currency, rent basis, and payment frequency before leaving Draft. Before execution, attach a current private Renewal Letter with Document Date and link it to the request. Mark Executed creates one successor lease, links predecessor and successor, copies ownership, contacts, landlord, classification, and selected financial structure, and applies approved proposed terms. Application validation permits one non-cancelled successor while retaining cancelled and amended revision history.
+For Renew, Renegotiate, or Relocate, the approved request requires proposed property, start date, end date, currency, rent basis, and payment frequency before leaving Draft. Before execution, attach a current private Renewal Letter with Document Date and link it to the same Lease and exact Renewal Request. Only Lease Administrator can perform the configured Mark Executed transition. Completion creates one successor lease, links predecessor and successor, copies ownership, contacts, landlord, classification, and selected financial structure, and applies approved proposed terms. Application validation permits one non-cancelled successor while retaining cancelled and amended revision history.
 
 ### 23.4 Cancellation and rejection
 
