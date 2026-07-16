@@ -98,7 +98,17 @@ def rent_schedule_query(user=None):
 
 
 def lease_document_query(user=None):
-    return dependent_query_condition("Lease Document", user)
+    user = user or frappe.session.user
+    if _is_unrestricted(user):
+        return ""
+    clearance = _clearance(user)
+    if not clearance:
+        return "1=0"
+    parent_condition = dependent_query_condition("Lease Document", user)
+    return (
+        f"({parent_condition}) and `tabLease Document`.confidentiality "
+        f"in ({_sql_values(clearance)})"
+    )
 
 
 def reminder_log_query(user=None):
@@ -155,6 +165,17 @@ def lease_has_permission(doc, user=None, ptype=None, permission_type=None, **kwa
 def dependent_has_permission(doc, user=None, ptype=None, permission_type=None, **kwargs):
     """Apply the linked lease scope while leaving role grants to Frappe."""
     return can_access_lease(doc.get("lease"), user)
+
+
+def lease_document_has_permission(doc, user=None, ptype=None, permission_type=None, **kwargs):
+    """Apply parent Lease scope and the document's own confidentiality clearance."""
+    user = user or frappe.session.user
+    if not can_access_lease(doc.get("lease"), user):
+        return False
+    if _is_unrestricted(user):
+        return True
+    classification = doc.get("confidentiality") or "Confidential"
+    return classification in _clearance(user)
 
 
 def can_approve_renewal(doc, user=None):

@@ -3,6 +3,10 @@ from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
 from frappe.utils.file_manager import save_file
 
+from rent_renewal_tracker.patches.v0_6.initialize_required_settings_and_document_families import (
+    execute as run_v0_6_upgrade_patch,
+)
+
 
 class TestLeaseDocument(IntegrationTestCase):
     def setUp(self):
@@ -129,16 +133,23 @@ class TestLeaseDocument(IntegrationTestCase):
     def test_derives_expiry_attention_status(self):
         file_doc = self.make_file(is_private=1)
         document = self.make_document(
-            file_doc.file_url, expiry_date=add_days(today(), -1)
+            file_doc.file_url,
+            effective_date=add_days(today(), -30),
+            expiry_date=add_days(today(), -1),
         ).insert()
 
         self.assertEqual(document.document_status, "Expired")
+        self.assertEqual(document.document_family_id, document.name)
         self.assertEqual(document.revision_number, 1)
         self.assertEqual(document.revision_status, "Current")
 
     def test_new_revision_supersedes_previous_document(self):
         original_file = self.make_file(is_private=1)
-        original = self.make_document(original_file.file_url).insert()
+        original = self.make_document(
+            original_file.file_url,
+            effective_date=add_days(today(), -30),
+            expiry_date=add_days(today(), 30),
+        ).insert()
         revision_file = self.make_file(is_private=1)
         revision = self.make_document(
             revision_file.file_url,
@@ -149,8 +160,43 @@ class TestLeaseDocument(IntegrationTestCase):
         original.reload()
         self.assertEqual(revision.revision_number, 2)
         self.assertEqual(revision.document_family_id, original.document_family_id)
+        self.assertEqual(original.document_family_id, original.name)
         self.assertEqual(original.revision_status, "Superseded")
         self.assertEqual(original.document_status, "Superseded")
+        self.assertFalse(original.days_to_document_expiry)
+
+        rejected_file = self.make_file(is_private=1)
+        rejected_revision = self.make_document(
+            rejected_file.file_url,
+            previous_revision=original.name,
+            revision_reason="Attempted branch from a superseded revision.",
+        )
+
+        with self.assertRaises(frappe.ValidationError):
+            rejected_revision.insert()
+
+    def test_upgrade_patch_repairs_revision_and_confidentiality_metadata(self):
+        file_doc = self.make_file(is_private=1)
+        document = self.make_document(file_doc.file_url).insert()
+        frappe.db.set_value(
+            "Lease Document",
+            document.name,
+            {
+                "document_family_id": "",
+                "revision_number": 0,
+                "revision_status": "",
+                "confidentiality": "",
+            },
+            update_modified=False,
+        )
+
+        run_v0_6_upgrade_patch()
+        document.reload()
+
+        self.assertEqual(document.document_family_id, document.name)
+        self.assertEqual(document.revision_number, 1)
+        self.assertEqual(document.revision_status, "Current")
+        self.assertEqual(document.confidentiality, "Confidential")
 
     def test_existing_file_cannot_be_replaced_in_place(self):
         original_file = self.make_file(is_private=1)

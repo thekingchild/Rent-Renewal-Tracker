@@ -19,8 +19,9 @@ ALLOWED_EXTENSIONS = {
 
 
 class LeaseDocument(Document):
-    def before_insert(self):
-        self.set_revision_identity()
+    def before_validate(self):
+        if self.is_new():
+            self.set_revision_identity()
 
     def validate(self):
         if (
@@ -51,7 +52,7 @@ class LeaseDocument(Document):
                 "select name from `tabLease Document` where name=%s for update", self.previous_revision
             )
             previous = frappe.get_doc("Lease Document", self.previous_revision)
-            previous.check_permission("read")
+            previous.check_permission("write")
             if previous.revision_status == "Superseded":
                 frappe.throw(_("Create a revision from the current document revision."))
             self.document_family_id = previous.document_family_id or previous.name
@@ -61,8 +62,8 @@ class LeaseDocument(Document):
             ) or previous.revision_number or 1
             self.revision_number = latest + 1
         else:
-            self.document_family_id = self.document_family_id or self.name
-            self.revision_number = self.revision_number or 1
+            self.document_family_id = self.name
+            self.revision_number = 1
 
     def validate_revision(self):
         if not self.previous_revision:
@@ -83,6 +84,7 @@ class LeaseDocument(Document):
     def set_document_status(self):
         if self.revision_status == "Superseded":
             self.document_status = "Superseded"
+            self.days_to_document_expiry = None
             return
         if not self.expiry_date:
             self.document_status = "No Expiry Date"
@@ -100,12 +102,15 @@ class LeaseDocument(Document):
             self.document_status = "Current"
 
     def supersede_previous_revision(self):
-        if self.previous_revision:
-            frappe.db.set_value(
-                "Lease Document", self.previous_revision,
-                {"revision_status": "Superseded", "document_status": "Superseded"},
-                update_modified=False,
-            )
+        if not self.previous_revision:
+            return
+
+        previous = frappe.get_doc("Lease Document", self.previous_revision)
+        previous.check_permission("write")
+        previous.revision_status = "Superseded"
+        previous.document_status = "Superseded"
+        previous.days_to_document_expiry = None
+        previous.save()
 
     def get_file_record(self):
         if not self.file:

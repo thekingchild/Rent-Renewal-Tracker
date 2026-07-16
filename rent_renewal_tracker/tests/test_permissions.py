@@ -1,6 +1,7 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
+from frappe.utils.file_manager import save_file
 
 from rent_renewal_tracker.permissions import can_access_lease, can_access_lease_doc
 
@@ -95,6 +96,30 @@ class TestLeasePermissions(IntegrationTestCase):
                 "confidentiality_classification": classification,
             }
         )
+
+    def make_lease_document(self, lease, confidentiality="Confidential"):
+        content = f"permission-{frappe.generate_hash(length=12)}".encode()
+        file_doc = save_file(
+            f"permission-{frappe.generate_hash(length=8)}.txt",
+            content,
+            "Lease",
+            lease.name,
+            is_private=1,
+        )
+        document = frappe.get_doc(
+            {
+                "doctype": "Lease Document",
+                "lease": lease.name,
+                "title": "Permission Evidence",
+                "category": "Correspondence",
+                "file": file_doc.file_url,
+                "document_date": today(),
+                "effective_date": today(),
+                "confidentiality": confidentiality,
+            }
+        ).insert()
+        attached_file = frappe.get_doc("File", file_doc.name)
+        return document, attached_file
 
     def test_viewer_cannot_read_unassigned_restricted_lease(self):
         self.assertFalse(can_access_lease(self.lease.name, self.user))
@@ -192,3 +217,95 @@ class TestLeasePermissions(IntegrationTestCase):
                 doc = frappe.new_doc(doctype)
                 doc.lease = self.lease.name
                 self.assertFalse(doc.has_permission(permission_type, user=user))
+
+    def test_document_confidentiality_restricts_record_and_private_file(self):
+        user = self.make_user("Responsible Officer")
+        lease = self.new_lease(user, classification="Internal").insert()
+        document, file_doc = self.make_lease_document(lease, confidentiality="Restricted")
+
+        self.assertTrue(can_access_lease(lease.name, user))
+        self.assertFalse(document.has_permission("read", user=user))
+        self.assertFalse(file_doc.has_permission("read", user=user))
+
+        frappe.set_user(user)
+        try:
+            visible = frappe.get_list("Lease Document", pluck="name", limit=0)
+            self.assertNotIn(document.name, visible)
+            with self.assertRaises(frappe.PermissionError):
+                frappe.get_doc("Lease Document", document.name).check_permission("read")
+        finally:
+            frappe.set_user("Administrator")
+
+    def test_authorized_document_and_file_follow_linked_lease_scope(self):
+        user = self.make_user("Responsible Officer")
+        lease = self.new_lease(user, classification="Internal").insert()
+        document, file_doc = self.make_lease_document(lease, confidentiality="Confidential")
+
+        self.assertTrue(document.has_permission("read", user=user))
+        self.assertTrue(file_doc.has_permission("read", user=user))
+
+        frappe.set_user(user)
+        try:
+            visible = frappe.get_list("Lease Document", pluck="name", limit=0)
+            self.assertIn(document.name, visible)
+        finally:
+            frappe.set_user("Administrator")
+
+    def test_user_cannot_create_document_above_clearance(self):
+        user = self.make_user("Responsible Officer")
+        lease = self.new_lease(user, classification="Internal").insert()
+        document = frappe.get_doc(
+            {
+                "doctype": "Lease Document",
+                "lease": lease.name,
+                "title": "Restricted Evidence",
+                "category": "Correspondence",
+                "file": "/private/files/unavailable.txt",
+                "confidentiality": "Restricted",
+            }
+        )
+
+        self.assertFalse(document.has_permission("create", user=user))
+        frappe.set_user(user)
+        try:
+            with self.assertRaises(frappe.PermissionError):
+                document.insert()
+        finally:
+            frappe.set_user("Administrator")
+
+    def test_read_only_role_cannot_create_revision(self):
+        user = self.make_user("Department Head")
+        frappe.get_doc(
+            {
+                "doctype": "User Permission",
+                "user": user,
+                "allow": "Lease Department",
+                "for_value": self.department.name,
+                "applicable_for": "Lease",
+            }
+        ).insert()
+        lease = self.new_lease("Administrator", classification="Internal").insert()
+        document, _ = self.make_lease_document(lease, confidentiality="Confidential")
+        revision = frappe.get_doc(
+            {
+                "doctype": "Lease Document",
+                "lease": lease.name,
+                "title": document.title,
+                "category": document.category,
+                "file": "/private/files/unavailable.txt",
+                "confidentiality": document.confidentiality,
+                "previous_revision": document.name,
+                "revision_reason": "Read-only users cannot revise evidence.",
+            }
+        )
+
+        self.assertTrue(document.has_permission("read", user=user))
+        frappe.set_user(user)
+        try:
+            with self.assertRaises(frappe.PermissionError):
+                revision.insert()
+        finally:
+            frappe.set_user("Administrator")
+
+        self.assertFalse(document.has_permission("write", user=user))
+        self.assertFalse(revision.has_permission("create", user=user))
