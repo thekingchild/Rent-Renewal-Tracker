@@ -1,4 +1,5 @@
 import frappe
+from frappe.handler import check_write_permission
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
 from frappe.utils.file_manager import save_file
@@ -272,6 +273,86 @@ class TestLeasePermissions(IntegrationTestCase):
                 document.insert()
         finally:
             frappe.set_user("Administrator")
+
+    def test_unsaved_document_upload_allows_every_write_enabled_role(self):
+        for role in (
+            "Rent Renewal System Manager",
+            "Lease Administrator",
+            "Responsible Officer",
+        ):
+            with self.subTest(role=role):
+                user = self.make_user(role)
+                frappe.set_user(user)
+                try:
+                    check_write_permission(
+                        "Lease Document",
+                        f"new-lease-document-{frappe.generate_hash(length=10)}",
+                    )
+                finally:
+                    frappe.set_user("Administrator")
+
+    def test_unsaved_document_upload_rejects_roles_without_write_permission(self):
+        for role in (
+            "System Manager",
+            "Department Head",
+            "Finance Approver",
+            "Legal Approver",
+            "Management Approver",
+            "Lease Auditor",
+            "Lease Viewer",
+        ):
+            with self.subTest(role=role):
+                user = self.make_user(role)
+                frappe.set_user(user)
+                try:
+                    with self.assertRaises(frappe.PermissionError):
+                        check_write_permission(
+                            "Lease Document",
+                            f"new-lease-document-{frappe.generate_hash(length=10)}",
+                        )
+                finally:
+                    frappe.set_user("Administrator")
+
+    def test_authorized_writer_can_save_document_after_temporary_upload(self):
+        for role in (
+            "Rent Renewal System Manager",
+            "Lease Administrator",
+            "Responsible Officer",
+        ):
+            with self.subTest(role=role):
+                user = self.make_user(role)
+                lease = self.new_lease(user, classification="Internal").insert()
+                temporary_name = f"new-lease-document-{frappe.generate_hash(length=10)}"
+
+                frappe.set_user(user)
+                try:
+                    check_write_permission("Lease Document", temporary_name)
+                    file_doc = save_file(
+                        f"permission-{frappe.generate_hash(length=8)}.txt",
+                        f"permission-{frappe.generate_hash(length=12)}".encode(),
+                        "Lease Document",
+                        temporary_name,
+                        is_private=1,
+                        df="file",
+                    )
+                    document = frappe.get_doc(
+                        {
+                            "doctype": "Lease Document",
+                            "lease": lease.name,
+                            "title": "Temporary Upload Evidence",
+                            "category": "Correspondence",
+                            "file": file_doc.file_url,
+                            "document_date": today(),
+                            "effective_date": today(),
+                            "confidentiality": "Confidential",
+                        }
+                    ).insert()
+                finally:
+                    frappe.set_user("Administrator")
+
+                file_doc.reload()
+                self.assertEqual(file_doc.attached_to_doctype, "Lease Document")
+                self.assertEqual(file_doc.attached_to_name, document.name)
 
     def test_read_only_role_cannot_create_revision(self):
         user = self.make_user("Department Head")
