@@ -9,10 +9,14 @@ from rent_renewal_tracker.install import (
     COUNT_NUMBER_CARDS,
     DASHBOARD_CHARTS,
     FIRST_RUN_BLOCK,
+    MONETARY_NUMBER_CARDS,
     NUMBER_CARDS,
     WORKFLOW_ACTIONS,
     WORKFLOW_STATES,
     set_missing_required_settings,
+)
+from rent_renewal_tracker.patches.v0_7.normalize_dashboard_number_card_currency import (
+    execute as normalize_dashboard_number_card_currency,
 )
 
 
@@ -115,3 +119,26 @@ class TestInstallationDefaults(IntegrationTestCase):
         self.assertTrue(frappe.db.exists("Custom HTML Block", FIRST_RUN_BLOCK))
         for label in COUNT_NUMBER_CARDS:
             self.assertFalse(frappe.db.get_value("Number Card", {"label": label}, "currency"))
+
+    def test_dashboard_currency_patch_normalizes_existing_cards(self):
+        settings = frappe.get_single("Rent Renewal Settings")
+        expected_currency = (
+            settings.default_currency or frappe.defaults.get_global_default("currency")
+        )
+        stale_currency = expected_currency or "NGN"
+
+        for label in COUNT_NUMBER_CARDS:
+            frappe.db.set_value("Number Card", {"label": label}, "currency", stale_currency)
+        for label in MONETARY_NUMBER_CARDS:
+            frappe.db.set_value("Number Card", {"label": label}, "currency", None)
+
+        normalize_dashboard_number_card_currency()
+        normalize_dashboard_number_card_currency()
+
+        for label in COUNT_NUMBER_CARDS:
+            self.assertFalse(frappe.db.get_value("Number Card", {"label": label}, "currency"))
+        for label in MONETARY_NUMBER_CARDS:
+            self.assertEqual(
+                frappe.db.get_value("Number Card", {"label": label}, "currency"),
+                expected_currency,
+            )
