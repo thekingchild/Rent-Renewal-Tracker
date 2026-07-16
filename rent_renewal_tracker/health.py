@@ -2,6 +2,7 @@ import frappe
 
 from rent_renewal_tracker.install import (
     APP_ROLES,
+    COUNT_NUMBER_CARDS,
     DASHBOARD_CHARTS,
     NUMBER_CARDS,
     WORKFLOW_ACTIONS,
@@ -64,6 +65,10 @@ def verify_installation():
         "dashboard_cards": all(
             frappe.db.exists("Number Card", {"label": label})
             for label, _, _, _ in NUMBER_CARDS
+        ),
+        "dashboard_card_formats": all(
+            not frappe.db.get_value("Number Card", {"label": label}, "currency")
+            for label in COUNT_NUMBER_CARDS
         ),
         "dashboard_charts": all(
             frappe.db.exists("Dashboard Chart", name)
