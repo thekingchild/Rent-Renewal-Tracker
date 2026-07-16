@@ -169,7 +169,16 @@ def dependent_has_permission(doc, user=None, ptype=None, permission_type=None, *
 
 def lease_document_has_permission(doc, user=None, ptype=None, permission_type=None, **kwargs):
     """Apply parent Lease scope and the document's own confidentiality clearance."""
+    ptype = ptype or permission_type
     user = user or frappe.session.user
+
+    # Frappe checks "write" against a blank new document before uploading an
+    # attachment to a temporary "new-lease-document-..." name. Let the normal
+    # DocType permission matrix decide that probe; the actual insert still has
+    # a Lease value and receives the full linked-record checks below.
+    if ptype == "write" and doc.is_new() and not doc.get("lease"):
+        return True
+
     if not can_access_lease(doc.get("lease"), user):
         return False
     if _is_unrestricted(user):
