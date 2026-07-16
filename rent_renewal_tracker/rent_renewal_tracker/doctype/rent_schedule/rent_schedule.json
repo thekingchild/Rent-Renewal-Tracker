@@ -4,7 +4,7 @@
  "creation": "2026-07-10 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["lease", "description", "period_section", "period_from", "period_to", "due_date", "amount_section", "currency", "base_rent", "service_charge", "tax", "total_due", "payment_section", "payment_status", "schedule_status", "payment_reference", "paid_on", "notes"],
+ "field_order": ["lease", "description", "period_section", "period_from", "period_to", "due_date", "amount_section", "currency", "base_rent", "service_charge", "tax", "total_due", "payment_section", "payment_status", "schedule_status", "payment_reference", "paid_on", "notes", "amended_from"],
  "fields": [
   {"fieldname": "lease", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Lease", "options": "Lease", "reqd": 1, "description": "Lease that this rent schedule row belongs to."},
   {"fieldname": "description", "fieldtype": "Data", "in_list_view": 1, "label": "Description", "reqd": 1, "description": "Short label for the charge period or billing line."},
@@ -23,7 +23,8 @@
   {"default": "Planned", "fieldname": "schedule_status", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Schedule Status", "options": "Planned\nDue\nPaid\nWaived\nOverdue\nCancelled", "read_only": 1, "reqd": 1, "description": "Operational status of the rent schedule entry."},
   {"fieldname": "payment_reference", "fieldtype": "Data", "label": "Payment Reference", "description": "Receipt, transaction, or voucher reference for the payment."},
   {"fieldname": "paid_on", "fieldtype": "Date", "label": "Paid On", "description": "Date the payment was received or marked settled."},
-  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes", "description": "Extra context about the charge, payment, or exceptions."}
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes", "description": "Extra context about the charge, payment, or exceptions."},
+  {"fieldname": "amended_from", "fieldtype": "Link", "label": "Amended From", "no_copy": 1, "options": "Rent Schedule", "print_hide": 1, "read_only": 1, "search_index": 1}
  ],
  "index_web_pages_for_search": 0,
  "is_submittable": 1,

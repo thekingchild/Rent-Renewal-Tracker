@@ -4,7 +4,7 @@
  "creation": "2026-07-10 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["lease", "renewal_sequence", "workflow_state", "open_cycle_key", "snapshot_section", "current_start_date", "current_end_date", "current_currency", "current_monthly_rent", "current_annual_rent", "current_payment_frequency", "proposal_section", "proposed_property", "proposed_start_date", "proposed_end_date", "proposed_notice_date", "proposed_currency", "proposed_rent_basis", "proposed_monthly_rent", "proposed_annual_rent", "proposed_payment_frequency", "proposed_escalation_rule", "recommendation_section", "recommendation", "termination_effective_date", "termination_reason", "business_justification", "risk_assessment", "budget_impact", "alternative_options", "approval_section", "current_approver_role", "workflow_comment", "decision_history", "outcome_section", "requested_by", "requested_on", "final_decision_by", "final_decision_on", "rejection_reason", "completion_date", "successor_lease"],
+ "field_order": ["lease", "renewal_sequence", "workflow_state", "open_cycle_key", "snapshot_section", "current_start_date", "current_end_date", "current_currency", "current_monthly_rent", "current_annual_rent", "current_payment_frequency", "proposal_section", "proposed_property", "proposed_start_date", "proposed_end_date", "proposed_notice_date", "proposed_currency", "proposed_rent_basis", "proposed_monthly_rent", "proposed_annual_rent", "proposed_payment_frequency", "proposed_escalation_rule", "recommendation_section", "recommendation", "termination_effective_date", "termination_reason", "business_justification", "risk_assessment", "budget_impact", "alternative_options", "approval_section", "current_approver_role", "workflow_comment", "decision_history", "outcome_section", "requested_by", "requested_on", "final_decision_by", "final_decision_on", "rejection_reason", "completion_date", "successor_lease", "amended_from"],
  "fields": [
   {"fieldname": "lease", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Lease", "options": "Lease", "reqd": 1, "description": "Lease record for which renewal is being requested."},
   {"fieldname": "renewal_sequence", "fieldtype": "Int", "in_list_view": 1, "label": "Renewal Sequence", "read_only": 1, "reqd": 1, "description": "Sequential number for repeated renewal cycles on the same lease."},
@@ -47,7 +47,8 @@
   {"allow_on_submit": 1, "fieldname": "final_decision_on", "fieldtype": "Date", "label": "Final Decision On", "read_only": 1, "description": "Date the final decision was recorded."},
   {"allow_on_submit": 1, "fieldname": "rejection_reason", "fieldtype": "Small Text", "label": "Rejection Reason", "read_only": 1, "description": "Reason captured when the request is rejected."},
   {"allow_on_submit": 1, "fieldname": "completion_date", "fieldtype": "Date", "label": "Completion Date", "read_only": 1, "description": "Date the renewal cycle was completed."},
-  {"allow_on_submit": 1, "fieldname": "successor_lease", "fieldtype": "Link", "label": "Successor Lease", "options": "Lease", "read_only": 1, "description": "Linked lease created after the renewal request is completed."}
+  {"allow_on_submit": 1, "fieldname": "successor_lease", "fieldtype": "Link", "label": "Successor Lease", "options": "Lease", "read_only": 1, "description": "Linked lease created after the renewal request is completed."},
+  {"fieldname": "amended_from", "fieldtype": "Link", "label": "Amended From", "no_copy": 1, "options": "Renewal Request", "print_hide": 1, "read_only": 1, "search_index": 1}
  ],
  "index_web_pages_for_search": 0,
  "is_submittable": 1,

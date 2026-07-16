@@ -219,7 +219,11 @@ class RenewalRequest(Document):
             return self.successor_lease
 
         frappe.db.sql("select name from `tabLease` where name=%s for update", self.lease)
-        existing = frappe.db.get_value("Lease", {"predecessor_lease": self.lease}, "name")
+        existing = frappe.db.get_value(
+            "Lease",
+            {"predecessor_lease": self.lease, "docstatus": ["<", 2]},
+            "name",
+        )
         if existing:
             self.db_set("successor_lease", existing, update_modified=False)
             return existing
