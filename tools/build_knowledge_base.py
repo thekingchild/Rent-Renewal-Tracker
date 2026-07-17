@@ -218,7 +218,7 @@ def add_cover(doc):
     set_run(p.add_run("Frappe Framework v16 application  |  Application version 0.2.0"), size=10, color=MUTED, bold=True)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    set_run(p.add_run("Prepared 16 July 2026"), size=10, color=MUTED)
+    set_run(p.add_run("Prepared 17 July 2026"), size=10, color=MUTED)
     for _ in range(5):
         doc.add_paragraph()
     callout = doc.add_table(rows=1, cols=1)
@@ -234,7 +234,7 @@ def add_front_matter(doc):
     doc.add_heading("How to use this knowledge base", level=1)
     p = doc.add_paragraph()
     add_rich_text(p, "Start with Sections 1-6 for orientation and setup. Operational users should then study leases, documents, payments, and lifecycle requests. Approvers should focus on the workflow and permissions chapters. Administrators and auditors should also study reminders, automation, reporting, security controls, and the field catalogue.")
-    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 16 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
+    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 17 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
     doc.add_heading("Contents at a glance", level=2)
     contents = [
         "Purpose, scope, roles, access, and workspace navigation",
@@ -327,11 +327,29 @@ For scoped users, a lease is visible when the user is the Responsible Officer, C
 
 When a new Lease is saved, the same scope is evaluated from its proposed values before insertion. Unrestricted operational roles may create without assignment. A Responsible Officer must assign themselves as Responsible Officer, Contract Owner, or Backup Officer, or hold the matching Lease Department User Permission, and the selected classification must be within their clearance. Related records must link to a Lease the user is authorized to access.
 
-### 22.4 Confidentiality clearance
+### 22.4 Confidentiality classification and clearance
 
-Lease Viewer can see Public and Internal leases. Responsible Officer, Department Head, and Finance Approver can see Public, Internal, and Confidential leases. Legal Approver, Management Approver, and Lease Auditor can see Public, Internal, Confidential, and Restricted leases. A user with multiple roles receives the union of those clearances. Lease Document access must pass this parent clearance and the document's Internal, Confidential, or Restricted classification; a user may see the Lease while a stricter linked document and private file remain hidden.
+`Confidentiality Classification` is a required Lease field and defaults to `Internal`. It controls how sensitive the entire Lease record is treated. Classification is one access gate rather than a complete permission by itself: a scoped user must also have the required application role and DocType permission and must be assigned as Responsible Officer, Contract Owner, or Backup Officer, or hold the matching Lease Department User Permission.
 
-Role permissions are also combined. A user with Responsible Officer plus Legal Approver, Management Approver, or Lease Auditor receives Lease Document create permission from Responsible Officer and Restricted clearance from the additional role, but the user must still be assigned to the Lease or hold the matching Lease Department User Permission.
+- `Public`: use for low-sensitivity lease information that may be shared broadly among authorized Rent Renewal Tracker users. Public does not mean internet-public, website-visible, or available to Guest; Guest users receive no application access.
+- `Internal`: use for routine operational leases intended for staff inside the organization. This is the recommended default for ordinary leases.
+- `Confidential`: use for commercially sensitive leases containing negotiated rents, special terms, sensitive counterparty information, or material internal assessments. This level excludes Lease Viewer.
+- `Restricted`: use only for highly sensitive leases involving litigation, executive matters, investigations, strategic negotiations, exceptional financial terms, or similarly limited information.
+
+Public and Internal currently have the same technical role-clearance boundary. Their difference is the business handling label: Public means broadly shareable within the authorized app population, while Internal records information as ordinary internal-only material. Neither classification bypasses assignment, department scope, DocType permission, or authentication.
+
+Clearance by scoped role is:
+
+- `Lease Viewer`: Public and Internal.
+- `Responsible Officer`, `Department Head`, and `Finance Approver`: Public, Internal, and Confidential.
+- `Legal Approver`, `Management Approver`, and `Lease Auditor`: Public, Internal, Confidential, and Restricted.
+- `Administrator`, `System Manager`, `Rent Renewal System Manager`, and `Lease Administrator`: bypass the classification and assignment filters as unrestricted roles, while the normal DocType action matrix still determines what each role may create, write, submit, cancel, export, or delete.
+
+A user with multiple roles receives the union of those clearances. For example, Responsible Officer plus Legal Approver receives create and submit authority from Responsible Officer and Restricted clearance from Legal Approver, but the user must still be assigned to the Lease or hold the matching Lease Department User Permission.
+
+The classification is enforced when leases are listed, opened, created, saved, reported, exported, or counted on permission-aware dashboards. Renewal Requests, Rent Schedules, and Reminder Logs inherit the parent Lease authorization through their Lease link. Lease Documents must pass both the parent Lease classification and the document's separate Internal, Confidential, or Restricted classification, so a user may see a Lease while a stricter linked document and its private file remain hidden. Restricted leases also display a red warning in the Lease form, and a successor Lease created from a completed renewal inherits the predecessor's classification.
+
+Choose the classification before submitting the Lease. Changes to a submitted Lease follow the normal Frappe amendment and document-control process.
 
 ### 22.5 Workflow authorization and segregation of duties
 
@@ -571,7 +589,7 @@ def add_final_sections(doc):
         ("Open cycle", "A non-final Renewal Request that reserves the lease so another lifecycle request cannot start."),
         ("Reminder threshold", "A configured number of days before End Date when an event becomes eligible."),
         ("Overdue cadence", "The minimum interval, in days, between overdue reminder events."),
-        ("Confidentiality classification", "The lease-level access label Public, Internal, Confidential, or Restricted."),
+        ("Confidentiality classification", "The required lease-level sensitivity label Public, Internal, Confidential, or Restricted. It works together with role permission and assignment or department scope; Public never means guest or website access."),
         ("Document family", "All immutable revisions of the same Lease Document."),
         ("Successor lease", "The new lease created when a non-termination lifecycle request is completed."),
     ]
@@ -636,7 +654,7 @@ def main():
     core.subject = "Complete application features, operation, roles, permissions, workflows and field reference"
     core.author = "Rent Renewal Tracker contributors"
     core.keywords = "lease, rent, renewal, Frappe, user manual, knowledge base"
-    core.comments = "Generated from the application source as of 16 July 2026."
+    core.comments = "Generated from the application source as of 17 July 2026."
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUTPUT)
     print(OUTPUT)
