@@ -18,6 +18,9 @@ from rent_renewal_tracker.install import (
 from rent_renewal_tracker.patches.v0_7.normalize_dashboard_number_card_currency import (
     execute as normalize_dashboard_number_card_currency,
 )
+from rent_renewal_tracker.patches.v0_9.normalize_dashboard_chart_currency import (
+    execute as normalize_dashboard_chart_currency,
+)
 
 
 class TestInstallationDefaults(IntegrationTestCase):
@@ -115,6 +118,7 @@ class TestInstallationDefaults(IntegrationTestCase):
                     {"name": chart_name, "report_name": report_name},
                 )
             )
+            self.assertFalse(frappe.db.get_value("Dashboard Chart", chart_name, "currency"))
 
         self.assertTrue(frappe.db.exists("Custom HTML Block", FIRST_RUN_BLOCK))
         for label in COUNT_NUMBER_CARDS:
@@ -142,3 +146,13 @@ class TestInstallationDefaults(IntegrationTestCase):
                 frappe.db.get_value("Number Card", {"label": label}, "currency"),
                 expected_currency,
             )
+
+    def test_dashboard_chart_currency_patch_normalizes_existing_charts(self):
+        for chart_name, _ in DASHBOARD_CHARTS:
+            frappe.db.set_value("Dashboard Chart", chart_name, "currency", "NGN")
+
+        normalize_dashboard_chart_currency()
+        normalize_dashboard_chart_currency()
+
+        for chart_name, _ in DASHBOARD_CHARTS:
+            self.assertFalse(frappe.db.get_value("Dashboard Chart", chart_name, "currency"))
