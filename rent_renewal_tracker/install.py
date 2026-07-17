@@ -143,6 +143,9 @@ def setup_dashboard_defaults():
                 "report_name": report_name,
                 "use_report_chart": 1,
                 "filters_json": "{}",
+                # Both bundled report charts aggregate record counts. A populated
+                # currency makes Frappe format their tooltips as monetary values.
+                "currency": None,
                 "is_public": 0,
                 "is_standard": 0,
                 "module": "Rent Renewal Tracker",

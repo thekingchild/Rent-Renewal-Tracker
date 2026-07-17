@@ -58,6 +58,7 @@ def execute(filters=None):
             ],
         },
         "type": "bar",
+        "fieldtype": "Int",
         "colors": ["#2563eb"],
     }
     message = None if rows else _("No renewal requests match the selected filters.")

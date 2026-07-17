@@ -49,6 +49,7 @@ def execute(filters=None):
             "datasets": [{"name": _("Leases"), "values": values}],
         },
         "type": "bar",
+        "fieldtype": "Int",
         "colors": ["#d97706"],
     }
     message = None if rows else _("No leases expire within the selected date range.")
