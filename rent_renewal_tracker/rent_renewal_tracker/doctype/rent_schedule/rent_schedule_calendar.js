@@ -9,6 +9,7 @@ frappe.views.calendar["Rent Schedule"] = {
 	style_map: {
 		Planned: "info",
 		Due: "warning",
+		"Partially Paid": "warning",
 		Paid: "success",
 		Waived: "secondary",
 		Overdue: "danger",

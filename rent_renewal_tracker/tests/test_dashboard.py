@@ -55,9 +55,9 @@ class TestDashboard(IntegrationTestCase):
             {"action_type": "Overdue Payment"},
         )
 
-    def test_setup_readiness_returns_six_checks(self):
+    def test_setup_readiness_includes_overlap_review(self):
         columns, rows, _, _, summary = setup_readiness({})
 
-        self.assertEqual(len(rows), 6)
+        self.assertEqual(len(rows), 7)
         self.assertIn("status", {column["fieldname"] for column in columns})
         self.assertEqual(summary[0]["label"], "Ready")

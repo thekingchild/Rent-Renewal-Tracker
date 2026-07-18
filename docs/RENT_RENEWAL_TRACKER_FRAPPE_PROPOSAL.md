@@ -91,7 +91,7 @@ The app will calculate key dates and statuses server-side so reporting and remin
 
 ### Rent Schedule
 
-The rent schedule module will track planned rent obligations, due dates, period covered, service charge, tax, total due, payment status, and payment references. Release 1 will track planned and recorded status only; it will not process payments.
+The rent schedule module tracks planned rent obligations, due dates, period covered, service charge, tax, total due, individual payment evidence, total paid, outstanding balance, and derived payment status. Supported Monthly and Annual lease terms can supply installment defaults using the lease payment frequency; unsupported bases remain manual. Release 1 records payment evidence and reconciliation status only; it does not execute bank payments or post accounting entries.
 
 ### Lease Documents
 

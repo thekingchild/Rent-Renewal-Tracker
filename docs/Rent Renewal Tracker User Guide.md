@@ -384,6 +384,25 @@ The system prevents:
 - Negative notice periods.
 - Negative monetary values.
 - Active leases without core ownership, date, currency, and rent information.
+- A new lease, or a change to a lease property, term, or ongoing status, when its
+  dates overlap another ongoing lease for the same property. Existing legacy
+  conflicts are marked `Overlap Review Required` so unrelated corrections remain
+  possible while an administrator resolves the conflict.
+
+### 10.9 Resolving an Existing Overlap
+
+Do not delete or automatically terminate either lease based only on the overlap flag.
+Review the signed agreements and supporting evidence first, then use the appropriate
+resolution:
+
+1. Complete the termination or cancellation of the lease that is no longer ongoing.
+2. Correct an inaccurate Property, Start Date, or End Date on the incorrect record.
+3. If both agreements are valid for distinct rentable units, create or select the correct
+   unit-level Property records rather than keeping both against one Property.
+
+An unrelated correction remains allowed while review is pending. A change that keeps an
+overlapping lease ongoing is blocked. The daily status refresh synchronizes the review flags
+after the underlying conflict is resolved.
 
 ## 11. Lease Documents
 
@@ -509,6 +528,9 @@ Use rent schedules to track planned payment obligations by lease and period.
 - `Total Due`
 - `Payment Status`
 - `Schedule Status`
+- `Payments`
+- `Total Paid`
+- `Outstanding Balance`
 - `Payment Reference`
 - `Paid On`
 - `Notes`
@@ -519,11 +541,22 @@ The system calculates `Total Due` as:
 
 - `Base Rent + Service Charge + Tax`
 
+For a new schedule, `Fetch Lease Financials` fills only blank amounts. Monthly
+and Annual rent bases are converted to an installment amount using the lease's
+Monthly, Quarterly, Semi-Annual, or Annual payment frequency. Per Square Metre,
+Fixed Term, Other rent bases, and an Other payment frequency remain manual so
+the system does not guess a commercial amount.
+
+Use `Record Payment` to add each receipt. The system totals the payment history,
+shows the outstanding balance, and keeps the schedule `Partially Paid` until the
+full amount is recorded.
+
 The system also derives `Schedule Status` automatically:
 
 - `Planned` if due date is in the future
 - `Due` if due today
 - `Overdue` if due date has passed and not settled
+- `Partially Paid` if a balance remains after one or more payments
 - `Paid` if payment status is `Paid`
 - `Waived` if payment status is `Waived`
 - `Cancelled` if the record is cancelled
@@ -537,6 +570,19 @@ The system prevents:
 - Negative amounts
 - Empty schedules with all zero amounts
 - Currency mismatch between schedule and lease
+- Overlapping schedule periods for the same lease
+- Payments that are zero, negative, missing evidence, or exceed Total Due
+
+### 12.4 Upgrade and Reconciliation Behavior
+
+During upgrade, an existing `Paid` schedule receives one historical payment row for its full
+Total Due. The migration retains the legacy payment date and reference where available and uses
+a clearly identified migration fallback only when they were absent.
+
+An existing `Partially Paid` schedule is marked `Payment Reconciliation Required`; the migration
+does not guess the amount already paid. Review the available receipt or bank evidence and use
+`Record Payment` to capture the supported amount. The schedule then derives `Total Paid`,
+`Outstanding Balance`, `Payment Status`, and `Schedule Status` from its payment history.
 
 ## 13. Renewal Request Workflow
 

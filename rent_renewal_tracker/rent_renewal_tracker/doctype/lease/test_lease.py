@@ -2,6 +2,10 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
 
+from rent_renewal_tracker.rent_renewal_tracker.doctype.lease.lease import (
+    sync_lease_overlap_review_flags,
+)
+
 
 class TestLease(IntegrationTestCase):
     def setUp(self):
@@ -82,6 +86,71 @@ class TestLease(IntegrationTestCase):
 
         self.assertRaises(frappe.ValidationError, lease.insert)
 
+    def test_rejects_overlapping_ongoing_lease_for_same_property(self):
+        first = self.make_lease().insert()
+        with self.assertRaises(frappe.ValidationError):
+            self.make_lease(
+                lease_title="Overlapping Lease",
+                start_date=add_days(today(), 30),
+                end_date=add_days(today(), 90),
+            ).insert()
+
+        self.assertTrue(frappe.db.exists("Lease", first.name))
+
+    def test_allows_next_lease_after_existing_term_ends(self):
+        first = self.make_lease(end_date=add_days(today(), 30)).insert()
+        second = self.make_lease(
+            lease_title="Adjacent Lease",
+            start_date=add_days(first.end_date, 1),
+            end_date=add_days(first.end_date, 90),
+        ).insert()
+
+        self.assertTrue(frappe.db.exists("Lease", second.name))
+
+    def test_legacy_overlap_allows_unrelated_edit_and_clears_after_resolution(self):
+        legacy = self.make_lease(
+            lease_title="Legacy Conflict",
+            lease_status="Draft",
+        ).insert()
+        current = self.make_lease(lease_title="Current Conflict").insert()
+        frappe.db.set_value("Lease", legacy.name, "lease_status", "Active")
+
+        legacy = frappe.get_doc("Lease", legacy.name)
+        legacy.comments = "Reviewed without changing the property or term."
+        legacy.save()
+        self.assertTrue(legacy.overlap_review_required)
+
+        frappe.db.set_value("Lease", current.name, "lease_status", "Terminated")
+        sync_lease_overlap_review_flags()
+        self.assertEqual(
+            frappe.db.get_value("Lease", legacy.name, "overlap_review_required"),
+            0,
+        )
+        self.assertEqual(
+            frappe.db.get_value("Lease", current.name, "overlap_review_required"),
+            0,
+        )
+
+    def test_legacy_overlap_can_be_resolved_by_terminating_one_lease(self):
+        legacy = self.make_lease(
+            lease_title="Legacy Conflict to End",
+            lease_status="Draft",
+        ).insert()
+        current = self.make_lease(lease_title="Current Conflict to Keep").insert()
+        frappe.db.set_value("Lease", legacy.name, "lease_status", "Active")
+
+        sync_lease_overlap_review_flags()
+        legacy = frappe.get_doc("Lease", legacy.name)
+        legacy.lease_status = "Terminated"
+        legacy.save()
+        sync_lease_overlap_review_flags()
+
+        self.assertEqual(legacy.overlap_review_required, 0)
+        self.assertEqual(
+            frappe.db.get_value("Lease", current.name, "overlap_review_required"),
+            0,
+        )
+
     def test_assigns_document_id(self):
         lease = self.make_lease(lease_status="Draft").insert()
 
@@ -123,6 +192,8 @@ class TestLease(IntegrationTestCase):
             lease_title="Successor Lease",
             lease_status="Draft",
             predecessor_lease=predecessor.name,
+            start_date=add_days(predecessor.end_date, 1),
+            end_date=add_days(predecessor.end_date, 365),
         ).insert()
         successor.submit()
         successor.cancel()
@@ -140,12 +211,16 @@ class TestLease(IntegrationTestCase):
         first = self.make_lease(
             lease_title="First Successor",
             predecessor_lease=predecessor.name,
+            start_date=add_days(predecessor.end_date, 1),
+            end_date=add_days(predecessor.end_date, 365),
         ).insert()
 
         with self.assertRaises(frappe.ValidationError):
             self.make_lease(
                 lease_title="Second Successor",
                 predecessor_lease=predecessor.name,
+                start_date=add_days(predecessor.end_date, 1),
+                end_date=add_days(predecessor.end_date, 365),
             ).insert()
 
         self.assertTrue(frappe.db.exists("Lease", first.name))

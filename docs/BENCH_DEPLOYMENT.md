@@ -42,7 +42,8 @@ bench --site <test-site> set-config allow_tests true
 bench --site <test-site> run-tests --app rent_renewal_tracker
 ```
 
-The integration suite covers installation defaults, lease calculations, schedules, private
+The integration suite covers installation defaults, lease calculations, property-term overlap
+protection, schedule financial defaults, partial payments and overpayment rejection, private
 files, renewal cycles, successor leases, reminders, delivery retries, permissions-sensitive
 report queries, and the Apps Page permission hook.
 
@@ -72,6 +73,22 @@ bench --site <site-name> execute rent_renewal_tracker.health.verify_installation
 
 Schema and default-data changes are delivered through `patches.txt`; do not manually import
 standard DocTypes or Workflow records during upgrades.
+
+The safe lease and payment-controls migration also:
+
+- Flags existing pairs of ongoing leases whose inclusive terms overlap for the same Property.
+  It does not guess which legal record should be cancelled or terminated.
+- Converts a legacy `Paid` schedule into one full-value historical payment row.
+- Marks a legacy `Partially Paid` schedule for reconciliation without inventing a paid amount.
+- Preserves existing Custom DocPerm rows and other site-specific permission customizations.
+
+After migration, review `Setup Readiness > Lease Overlap Review`. Reconcile every flagged pair
+against the signed agreements, then complete the appropriate termination/cancellation or correct
+an inaccurate Property or term. Run the daily status refresh after resolving the source data:
+
+```bash
+bench --site <site-name> execute rent_renewal_tracker.scheduled_tasks.refresh_lease_statuses
+```
 
 ## Rollback preparation
 

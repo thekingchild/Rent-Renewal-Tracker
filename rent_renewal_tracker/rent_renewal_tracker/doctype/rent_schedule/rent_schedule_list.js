@@ -4,6 +4,7 @@ frappe.listview_settings["Rent Schedule"] = {
 		const colors = {
 			Planned: "blue",
 			Due: "orange",
+			"Partially Paid": "orange",
 			Paid: "green",
 			Waived: "gray",
 			Overdue: "red",

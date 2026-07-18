@@ -17,6 +17,7 @@ REQUIRED_DOCTYPES = (
     "Lease Contact",
     "Lease",
     "Rent Schedule",
+    "Rent Schedule Payment",
     "Lease Document",
     "Renewal Request",
     "Renewal Decision",
