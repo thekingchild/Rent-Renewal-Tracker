@@ -196,7 +196,7 @@ Validations:
 - Notice period must be zero or positive.
 - Annual rent and payment values cannot be negative.
 - Active leases require a property, landlord, department, responsible officer, end date, notice period, currency, and rent value.
-- Conflicting active leases for the same property/unit produce a warning or error according to approved business rules.
+- New or materially changed ongoing leases cannot overlap another ongoing lease for the same property. Legacy conflicts remain editable for unrelated corrections, are flagged for review, and can be resolved by ending or correcting either record.
 - Dates and financial totals are calculated server-side, not trusted from the browser.
 
 #### Rent Schedule
@@ -205,10 +205,10 @@ Use a linked DocType rather than only monthly/annual fields when rent changes ov
 
 Fields:
 
-- Lease, period from/to, due date, description, currency, base rent, service charge, tax, total due, payment status, and payment reference.
-- Status: Planned, Due, Paid, Waived, Overdue, Cancelled.
+- Lease, period from/to, due date, description, currency, base rent, service charge, tax, total due, payment history, total paid, outstanding balance, payment status, and latest payment reference/date.
+- Status: Planned, Due, Partially Paid, Paid, Waived, Overdue, Cancelled.
 
-Release 1 tracks planned and recorded payment status only; it does not move money or post accounts.
+Release 1 derives payment status and balances from recorded evidence. It does not move money or post accounts. Supported Monthly and Annual lease rent bases can supply installment defaults; ambiguous bases require manual amounts.
 
 #### Lease Document
 

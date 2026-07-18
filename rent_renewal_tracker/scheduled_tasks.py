@@ -26,6 +26,10 @@ def refresh_lease_statuses():
             update_modified=False,
         )
 
+    from rent_renewal_tracker.rent_renewal_tracker.doctype.lease.lease import (
+        sync_lease_overlap_review_flags,
+    )
+    sync_lease_overlap_review_flags()
 
 def refresh_rent_schedule_statuses():
     """Refresh unpaid schedule states without altering submitted commercial values."""

@@ -12,6 +12,10 @@ The first application slice provides:
 - Application roles created safely during installation.
 - Property, Landlord, Lease Department, Lease, Rent Schedule, and Lease Document DocTypes.
 - Server-side notice-date, expiry, rent, and occupancy-cost calculations.
+- Race-safe prevention of overlapping ongoing leases for the same property, with
+  review flags for conflicts that already existed before the control was added.
+- Lease-derived Rent Schedule installment defaults and auditable partial-payment
+  history with calculated paid and outstanding balances.
 - Private-file, attachment-ownership, extension, and file-size controls for lease documents.
 - Daily scheduled jobs that refresh time-dependent lease and rent-schedule values.
 - A native Department, Finance, Legal, and Management renewal approval workflow.

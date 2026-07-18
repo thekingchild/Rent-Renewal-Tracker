@@ -37,6 +37,12 @@ def execute(filters=None):
             _("Create or import the property register."),
         ),
         check("Leases", frappe.db.count("Lease") > 0, "Lease", _("Create or import lease records.")),
+        check(
+            "Lease Overlap Review",
+            frappe.db.count("Lease", {"overlap_review_required": 1}) == 0,
+            "Lease",
+            _("Resolve flagged same-property Lease periods before creating or changing terms."),
+        ),
     ]
     completed = sum(row.ready for row in checks)
     summary = [

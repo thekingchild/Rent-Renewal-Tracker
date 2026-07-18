@@ -24,7 +24,7 @@ frappe.query_reports["Upcoming Payments"] = {
 			fieldname: "schedule_status",
 			label: __("Schedule Status"),
 			fieldtype: "Select",
-			options: "\nPlanned\nDue\nPaid\nWaived\nOverdue\nCancelled",
+			options: "\nPlanned\nDue\nPartially Paid\nPaid\nWaived\nOverdue\nCancelled",
 		},
 		{
 			fieldname: "currency",

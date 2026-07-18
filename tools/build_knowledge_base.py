@@ -218,7 +218,7 @@ def add_cover(doc):
     set_run(p.add_run("Frappe Framework v16 application  |  Application version 0.2.0"), size=10, color=MUTED, bold=True)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    set_run(p.add_run("Prepared 17 July 2026"), size=10, color=MUTED)
+    set_run(p.add_run("Prepared 18 July 2026"), size=10, color=MUTED)
     for _ in range(5):
         doc.add_paragraph()
     callout = doc.add_table(rows=1, cols=1)
@@ -234,7 +234,7 @@ def add_front_matter(doc):
     doc.add_heading("How to use this knowledge base", level=1)
     p = doc.add_paragraph()
     add_rich_text(p, "Start with Sections 1-6 for orientation and setup. Operational users should then study leases, documents, payments, and lifecycle requests. Approvers should focus on the workflow and permissions chapters. Administrators and auditors should also study reminders, automation, reporting, security controls, and the field catalogue.")
-    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 17 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
+    add_callout(doc, "Authoritative scope", "This manual is derived from the application source in this workspace as of 18 July 2026. It documents implemented behavior. Site-specific Frappe configuration, custom roles, email accounts, print formats, and future code changes may alter what an individual user sees.", PALE_GOLD)
     doc.add_heading("Contents at a glance", level=2)
     contents = [
         "Purpose, scope, roles, access, and workspace navigation",
@@ -411,7 +411,7 @@ Daily automation and My Actions ignore Draft and Cancelled records. Submitted Cu
 
 ## 25. Payment Evidence and Schedule Integrity
 
-Partially Paid and Paid schedules require both Payment Reference and Paid On. Waived schedules require a waiver reason in Notes. Schedule periods cannot overlap another non-cancelled schedule for the same lease, and must fall within the lease term. Total Due equals Base Rent plus Service Charge plus Tax. The currency must match the lease. After a schedule is submitted, daily automation may refresh Schedule Status without changing submitted commercial values.
+Record Payment appends dated, referenced payment rows. The system derives Total Paid, Outstanding Balance, Payment Status, and Schedule Status from those rows; it rejects non-positive payments and overpayment. New schedules can fill blank financial fields from Monthly or Annual lease terms and the lease payment frequency. Unsupported rent bases and Other frequency remain manual rather than using an unsafe assumption. Waived schedules require a waiver reason in Notes. Schedule periods cannot overlap another non-cancelled schedule for the same lease, and must fall within the lease term. Total Due equals Base Rent plus Service Charge plus Tax. The currency must match the lease. After a schedule is submitted, daily automation may refresh status and accept payment evidence without changing submitted commercial values. Upgrade converts legacy Paid schedules into full-value historical payment rows and flags legacy Partially Paid schedules for evidence-based reconciliation without inventing an amount.
 
 ## 26. Reminder Engine, Delivery Audit, and Digest
 
@@ -654,7 +654,7 @@ def main():
     core.subject = "Complete application features, operation, roles, permissions, workflows and field reference"
     core.author = "Rent Renewal Tracker contributors"
     core.keywords = "lease, rent, renewal, Frappe, user manual, knowledge base"
-    core.comments = "Generated from the application source as of 17 July 2026."
+    core.comments = "Generated from the application source as of 18 July 2026."
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUTPUT)
     print(OUTPUT)
